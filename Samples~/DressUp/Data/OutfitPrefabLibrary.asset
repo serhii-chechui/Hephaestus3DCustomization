@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef682f595a4984dd5be28e514b292cb7, type: 3}
+  m_Name: OutfitPrefabLibrary
+  m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization.samples.dressup::WTFGames.Hephaestus.Customization3D.Samples.DressUp.OutfitPrefabLibrary
+  _entries:
+  - assetKey: TShirtJeans
+    prefab: {fileID: 919132149155446097, guid: 0993e39882f984a16ac5dbd3a5090a64, type: 3}
+  - assetKey: DenimShirt
+    prefab: {fileID: 919132149155446097, guid: 9b27c290ff07a4d599ce85d1ad59f118, type: 3}
+  - assetKey: BlackSuit
+    prefab: {fileID: 919132149155446097, guid: 9a4efc20886d74a839e1114764c13ae6, type: 3}
+  - assetKey: Overalls
+    prefab: {fileID: 919132149155446097, guid: f3f7a95fbf075463d827397d6baf4f52, type: 3}
+  - assetKey: Sneakers
+    prefab: {fileID: 919132149155446097, guid: f6311a80a16ec4635a326da4af3c4cc7, type: 3}
+  - assetKey: BrownShoes
+    prefab: {fileID: 919132149155446097, guid: f27f1510d9b4d4fd1ab4ce6f3a72acc2, type: 3}
+  - assetKey: Boots
+    prefab: {fileID: 919132149155446097, guid: 41b455e4bb7c5474c9669d16811edd4c, type: 3}
+  - assetKey: Fedora
+    prefab: {fileID: 5692328902237756160, guid: d81272cf80a7445f2857b93be38680d0, type: 3}
+  - assetKey: CockedFedora
+    prefab: {fileID: 4951406207205655096, guid: b5962abf7512d4d7eb2232df7a0c5d5f, type: 3}

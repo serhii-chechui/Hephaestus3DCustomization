@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8571037ce59947708de6574671b7c18, type: 3}
+  m_Name: DefaultOutfit
+  m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitPreset
+  _items:
+  - {fileID: 11400000, guid: 2267396db6c6a41d59bf78b98518af79, type: 2}
+  - {fileID: 11400000, guid: 8ff0c12ccf08c449c98c545ab8526243, type: 2}

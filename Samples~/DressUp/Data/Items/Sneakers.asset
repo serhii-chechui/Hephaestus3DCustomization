@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9ba028829824a89b94fc3b0e255082, type: 3}
+  m_Name: Sneakers
+  m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitItem
+  _slot: {fileID: 11400000, guid: 70b36d31842a24987b2b9697debb55fe, type: 2}
+  _attachMode: 0
+  _assetKey: Sneakers
+  _hiddenBodyParts:
+  - {fileID: 11400000, guid: 0e4e479401b0641d38a86dd2de214c89, type: 2}

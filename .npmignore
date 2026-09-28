@@ -1,0 +1,11 @@
+# Local dev tooling / files — not part of the published UPM package.
+.claude/
+.idea/
+.vs/
+.DS_Store
+**/.DS_Store
+*.log
+npm-debug.log*
+
+# Source art and the script that generates the sample assets.
+Art~/

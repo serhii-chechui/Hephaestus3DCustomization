@@ -1,0 +1,39 @@
+{
+  "name": "com.wtfgames.hephaestus.3d.customization",
+  "version": "1.0.0",
+  "displayName": "Hephaestus 3D Customization",
+  "description": "Hephaestus 3D Customization is a part of the Hephaestus framework. It dresses 3D characters: skinned outfit items are rebound to the character's skeleton by bone name, rigid items are attached to sockets, covered body parts are hidden, and the assets come from any loader behind a small provider interface.",
+  "license": "GPL-3.0-or-later",
+  "unity": "2019.2",
+  "keywords": [
+    "unity",
+    "mobile",
+    "framework",
+    "3d",
+    "character",
+    "customization",
+    "outfit",
+    "skinning"
+  ],
+  "author": {
+    "name": "WTFGames",
+    "email": "serhii.chechui@gmail.com",
+    "url": "https://github.com/serhii-chechui/Hephaestus3DCustomization"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Dress-Up",
+      "description": "A runnable dress-up scene with a Humanoid MakeHuman character (CC0) playing a Quaternius idle (CC0): four suits, three pairs of shoes and two hats that rebind to the character's skeleton, hide the body under them and follow the animation. No extra packages needed.",
+      "path": "Samples~/DressUp"
+    },
+    {
+      "displayName": "Addressables Provider",
+      "description": "An IOutfitAssetProvider over Hephaestus Addressables with a Zenject installer. Requires com.wtfgames.hephaestus.addressables.",
+      "path": "Samples~/AddressablesProvider"
+    }
+  ],
+  "publishConfig": {
+    "registry": "https://upm.wtfgames.com.ua/"
+  }
+}
