@@ -3,7 +3,8 @@ using UnityEngine;
 namespace WTFGames.Hephaestus.Customization3D
 {
     /// <summary>
-    /// Attaches rigid items to the character's <see cref="OutfitSocket"/> for the item's slot.
+    /// Attaches rigid items to the character's <see cref="OutfitSocket"/> for the item's slot
+    /// and socket id.
     /// The prefab keeps its local position, rotation and scale relative to the socket.
     /// </summary>
     public class SocketOutfitAttachStrategy : IOutfitAttachStrategy
@@ -16,9 +17,12 @@ namespace WTFGames.Hephaestus.Customization3D
         {
             var slot = context.Item.Slot;
 
-            if (!context.Skeleton.TryGetSocket(slot, out var socket))
+            var socketId = context.Item.SocketId;
+
+            if (!context.Skeleton.TryGetSocket(slot, socketId, out var socket))
             {
-                Debug.LogWarning($"{LogTag} Skeleton '{context.Skeleton.name}' has no socket for slot '{slot.DisplayName}'; '{context.Item.name}' isn't attached.", context.Skeleton);
+                var socketName = socketId.Length == 0 ? $"slot '{slot.DisplayName}'" : $"slot '{slot.DisplayName}', id '{socketId}'";
+                Debug.LogWarning($"{LogTag} Skeleton '{context.Skeleton.name}' has no socket for {socketName}; '{context.Item.name}' isn't attached.", context.Skeleton);
                 return null;
             }
 

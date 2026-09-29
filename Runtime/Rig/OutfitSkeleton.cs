@@ -7,9 +7,10 @@ namespace WTFGames.Hephaestus.Customization3D
     /// <summary>
     /// Indexes a character's bones by name, its <see cref="OutfitSocket"/>s by slot and its
     /// <see cref="OutfitBodyPartRenderer"/>s by body part.
-    /// Skinned outfits are rebound to these bones, so an item's bone names must match the
-    /// character's. The index is built on first use; call <see cref="Rebuild"/> after
-    /// changing the hierarchy.
+    /// Skinned outfits are rebound to these bones by name. Names match exactly first; aliases,
+    /// case-insensitive matching and namespace stripping (e.g. "mixamorig:Hips" → "Hips")
+    /// help with items made on another rig. The index is built on first use; call
+    /// <see cref="Rebuild"/> after changing the hierarchy or the matching settings.
     /// </summary>
     [DisallowMultipleComponent]
     public class OutfitSkeleton : MonoBehaviour
@@ -20,8 +21,22 @@ namespace WTFGames.Hephaestus.Customization3D
         [Tooltip("Top bone of the character's skeleton. Defaults to this transform.")]
         private Transform _rootBone;
 
+        [SerializeField]
+        [Tooltip("Bone names used by items that differ from the character's bone names.")]
+        private List<OutfitBoneAlias> _boneAliases = new List<OutfitBoneAlias>();
+
+        [SerializeField]
+        [Tooltip("Match bone names regardless of case when there's no exact match.")]
+        private bool _ignoreCase;
+
+        [SerializeField]
+        [Tooltip("Ignore a namespace prefix such as \"mixamorig:\" when there's no exact match.")]
+        private bool _ignoreNamespaces;
+
         private readonly Dictionary<string, Transform> _bones = new Dictionary<string, Transform>(StringComparer.Ordinal);
-        private readonly Dictionary<OutfitSlot, Transform> _sockets = new Dictionary<OutfitSlot, Transform>();
+        private readonly Dictionary<string, Transform> _bonesIgnoringCase = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _aliases = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly Dictionary<(OutfitSlot slot, string id), Transform> _sockets = new Dictionary<(OutfitSlot slot, string id), Transform>();
         private readonly Dictionary<OutfitBodyPart, List<Renderer>> _bodyParts = new Dictionary<OutfitBodyPart, List<Renderer>>();
         private bool _isBuilt;
 
@@ -34,6 +49,20 @@ namespace WTFGames.Hephaestus.Customization3D
                 EnsureBuilt();
                 return _bones.Count;
             }
+        }
+
+        public List<OutfitBoneAlias> BoneAliases => _boneAliases;
+
+        public bool IgnoreCase
+        {
+            get => _ignoreCase;
+            set => _ignoreCase = value;
+        }
+
+        public bool IgnoreNamespaces
+        {
+            get => _ignoreNamespaces;
+            set => _ignoreNamespaces = value;
         }
 
         /// <summary>Sets the root bone and rebuilds the index.</summary>
@@ -63,11 +92,19 @@ namespace WTFGames.Hephaestus.Customization3D
         public void Rebuild()
         {
             _bones.Clear();
+            _bonesIgnoringCase.Clear();
+            _aliases.Clear();
             _sockets.Clear();
             _bodyParts.Clear();
 
             ScanBones(RootBone);
             ScanCharacter(transform);
+
+            foreach (var entry in _boneAliases)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.alias) || string.IsNullOrEmpty(entry.bone)) continue;
+                _aliases[entry.alias] = entry.bone;
+            }
 
             _isBuilt = true;
         }
@@ -75,18 +112,41 @@ namespace WTFGames.Hephaestus.Customization3D
         public bool TryGetBone(string boneName, out Transform bone)
         {
             EnsureBuilt();
-
-            if (!string.IsNullOrEmpty(boneName) && _bones.TryGetValue(boneName, out bone) && bone != null) return true;
-
             bone = null;
+
+            if (string.IsNullOrEmpty(boneName)) return false;
+
+            if (Find(boneName, out bone)) return true;
+
+            if (_aliases.TryGetValue(boneName, out var aliased) && Find(aliased, out bone)) return true;
+
+            if (_ignoreNamespaces)
+            {
+                var separator = boneName.LastIndexOf(':');
+
+                if (separator >= 0 && separator < boneName.Length - 1)
+                {
+                    var local = boneName.Substring(separator + 1);
+
+                    if (Find(local, out bone)) return true;
+                    if (_aliases.TryGetValue(local, out aliased) && Find(aliased, out bone)) return true;
+                }
+            }
+
             return false;
         }
 
+        /// <summary>The slot's default socket (empty socket id).</summary>
         public bool TryGetSocket(OutfitSlot slot, out Transform socket)
+        {
+            return TryGetSocket(slot, string.Empty, out socket);
+        }
+
+        public bool TryGetSocket(OutfitSlot slot, string socketId, out Transform socket)
         {
             EnsureBuilt();
 
-            if (slot != null && _sockets.TryGetValue(slot, out socket) && socket != null) return true;
+            if (slot != null && _sockets.TryGetValue((slot, socketId ?? string.Empty), out socket) && socket != null) return true;
 
             socket = null;
             return false;
@@ -102,6 +162,15 @@ namespace WTFGames.Hephaestus.Customization3D
             return Array.Empty<Renderer>();
         }
 
+        private bool Find(string boneName, out Transform bone)
+        {
+            if (_bones.TryGetValue(boneName, out bone) && bone != null) return true;
+            if (_ignoreCase && _bonesIgnoringCase.TryGetValue(boneName, out bone) && bone != null) return true;
+
+            bone = null;
+            return false;
+        }
+
         private void ScanBones(Transform bone)
         {
             if (bone.GetComponent<OutfitInstance>() != null) return;
@@ -114,6 +183,8 @@ namespace WTFGames.Hephaestus.Customization3D
             {
                 _bones.Add(bone.name, bone);
             }
+
+            if (!_bonesIgnoringCase.ContainsKey(bone.name)) _bonesIgnoringCase.Add(bone.name, bone);
 
             for (var i = 0; i < bone.childCount; i++)
             {
@@ -142,13 +213,15 @@ namespace WTFGames.Hephaestus.Customization3D
 
             if (socket != null && socket.Slot != null)
             {
-                if (_sockets.ContainsKey(socket.Slot))
+                var key = (socket.Slot, socket.SocketId);
+
+                if (_sockets.ContainsKey(key))
                 {
-                    Debug.LogWarning($"{LogTag} Skeleton '{name}' has several sockets for slot '{socket.Slot.DisplayName}'; items use the first one.", socket);
+                    Debug.LogWarning($"{LogTag} Skeleton '{name}' has several sockets for slot '{socket.Slot.DisplayName}' with id '{socket.SocketId}'; items use the first one.", socket);
                 }
                 else
                 {
-                    _sockets.Add(socket.Slot, socket.transform);
+                    _sockets.Add(key, socket.transform);
                 }
             }
 

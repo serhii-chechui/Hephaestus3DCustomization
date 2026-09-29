@@ -11,8 +11,17 @@ namespace WTFGames.Hephaestus.Customization3D
 
         /// <summary>
         /// The item is a rigid object (hat, watch, glasses) parented to the character's
-        /// <see cref="OutfitSocket"/> for the item's slot.
+        /// <see cref="OutfitSocket"/> for the item's slot and socket id.
         /// </summary>
-        Socket = 1
+        Socket = 1,
+
+        /// <summary>
+        /// The item changes materials of the character's body parts (skin tone, tattoos,
+        /// make-up). Its prefab holds an <see cref="OutfitMaterialSet"/>.
+        /// </summary>
+        Material = 2,
+
+        /// <summary>The item is attached by its own <see cref="OutfitAttachStrategyAsset"/>.</summary>
+        Custom = 3
     }
 }
