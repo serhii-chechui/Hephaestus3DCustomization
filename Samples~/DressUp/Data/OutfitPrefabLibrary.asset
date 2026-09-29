@@ -28,6 +28,6 @@ MonoBehaviour:
   - assetKey: Boots
     prefab: {fileID: 919132149155446097, guid: 41b455e4bb7c5474c9669d16811edd4c, type: 3}
   - assetKey: Fedora
-    prefab: {fileID: 5692328902237756160, guid: d81272cf80a7445f2857b93be38680d0, type: 3}
+    prefab: {fileID: 7271731954101152970, guid: 31705e96cf4a44d429d0c31b05a4b189, type: 3}
   - assetKey: CockedFedora
-    prefab: {fileID: 4951406207205655096, guid: b5962abf7512d4d7eb2232df7a0c5d5f, type: 3}
+    prefab: {fileID: 2678066800324697494, guid: db835a213b60b46568b6bc89df2a734d, type: 3}

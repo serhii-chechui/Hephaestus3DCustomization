@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
+## [1.0.1] - 2026-09-29
+
+### fix
+- Dress-Up sample: the idle clip no longer tilts the body backwards or the preview model. The Quaternius clip was re-exported through Blender, which lost the axis setup its Humanoid avatar relies on, so every retargeted pose was mirrored; it now ships as a Humanoid `Idle.anim` extracted in Unity from the original file.
+
 ## [1.0.0] - 2026-09-28
 
 ### feat
