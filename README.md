@@ -24,6 +24,8 @@ skinned clothes are rebound to the character's skeleton so they animate with the
 - A default outfit that slots fall back to when their item is taken off.
 - Items made on other rigs: bone aliases, case-insensitive and namespace-free bone matching.
 - Replaceable attach strategies per attach mode.
+- Optional mesh combining for crowds: a dressed character becomes one skinned mesh with
+  atlased materials.
 - No dependencies.
 
 ## How skinned items work
@@ -35,15 +37,19 @@ the item is equipped:
 1. its prefab is instantiated under the character;
 2. every `SkinnedMeshRenderer` of the item gets the character's bones with the same names
    (`bones` and `rootBone`); the mesh, its bone weights and bind poses stay untouched;
-3. the item's own copy of the skeleton is destroyed.
+3. the item's own copy of the skeleton is destroyed, and so are `Animator` and `Animation`
+   components on the item, which have nothing left to drive (set
+   `SkinnedOutfitAttachStrategy.RemoveAnimators` to `false` to keep them).
 
 The character's `Animator` now moves the item's vertices through the same bones as the
 body. This works with Generic and Humanoid characters alike: a Humanoid avatar still drives
 the character's own bone transforms, which the items are bound to. A bone the character doesn't have is bound to its closest ancestor that the
-character has, with a warning.
+character has, with one warning per item that lists every such bone.
 
 Import skinned items with **Rig > Animation Type** set to `Generic` (no avatar is needed).
-With `None`, Unity imports them as static meshes and the item can't be rebound.
+With `None`, Unity imports them as static meshes and the item can't be rebound. **Avatar
+Definition** `No Avatar` keeps Unity from adding an `Animator` to the item's root; items
+imported with an avatar work too, since the strategy removes the `Animator`.
 
 ## Hiding the body under clothes
 
@@ -213,6 +219,36 @@ instances:
 ```csharp
 wearer.SetStrategy(new MySkinnedStrategy());
 ```
+
+### Many characters on screen
+
+Every worn item is a separate `SkinnedMeshRenderer`: it is skinned on its own and drawn at
+least once per material. For crowds, add `OutfitMeshCombiner` next to the `OutfitWearer`.
+After the worn items change (and nothing is loading any more), it bakes the character's
+visible skinned renderers into one child renderer and turns them off:
+
+- the character is skinned once;
+- submeshes with the same material merge, and with **Atlas** on, materials that share a
+  shader, keywords, render queue and tint (`_BaseColor`, `_Color`) merge into one whose
+  textures (`_BaseMap`, `_MainTex` by default) are packed into an atlas. Other properties
+  come from the first material of the group, so atlas only materials that differ in
+  textures. A material whose UVs leave the 0..1 range (tiling) keeps its own draw call.
+
+Requirements and limits:
+
+- the meshes need **Read/Write** on in their import settings; others are skipped, with a
+  warning;
+- renderers with blend shapes (faces with expressions) are skipped and stay separate;
+- the atlases are `RenderTexture`s filled on the GPU, so textures don't need Read/Write.
+  Leave normal maps out of the atlas properties: their encoding doesn't survive the copy on
+  every platform;
+- a bake runs on the main thread: about 20 ms (30 ms with atlases) for the Dress-Up
+  character in a suit and boots (25k vertices) on a desktop, several times that on a phone.
+  Combine when the look settles (the wardrobe closes, a level loads), not on every change;
+  `Separate()` shows the separate renderers again, `Combine()` bakes right away.
+
+`SkinnedMeshCombiner.Combine(renderers, settings)` is the same bake as a utility, for your
+own renderers; dispose the `CombinedSkinnedMesh` it returns when it is no longer shown.
 
 ## Samples
 
