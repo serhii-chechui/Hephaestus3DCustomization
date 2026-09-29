@@ -19,6 +19,15 @@ namespace WTFGames.Hephaestus.Customization3D
             }
         }
 
+        /// <summary>
+        /// Destroys a component of a scene object right away, so it is gone before the next
+        /// frame. Never use it on assets.
+        /// </summary>
+        public static void DestroyNow(Object target)
+        {
+            if (target != null) Object.DestroyImmediate(target);
+        }
+
         public static void SetLayerRecursively(GameObject root, int layer)
         {
             root.layer = layer;
