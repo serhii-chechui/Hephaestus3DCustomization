@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
+## [1.0.2] - 2026-09-29
+
+### fix
+- Dress-Up sample: Foot IK is on for the idle state, so the feet stay planted on the floor.
+
 ## [1.0.1] - 2026-09-29
 
 ### fix

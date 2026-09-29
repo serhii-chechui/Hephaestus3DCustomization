@@ -113,6 +113,8 @@ public static class DressUpSampleBuilder
 
         var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(IdlePath);
         var controller = AnimatorController.CreateAnimatorControllerAtPathWithClip($"{Root}/Animation/Character.controller", clip);
+        // Foot IK keeps the feet planted where the retargeted idle would let them slide.
+        controller.layers[0].stateMachine.defaultState.iKOnFeet = true;
         var animator = character.GetComponent<Animator>();
         animator.runtimeAnimatorController = controller;
         animator.applyRootMotion = false;
