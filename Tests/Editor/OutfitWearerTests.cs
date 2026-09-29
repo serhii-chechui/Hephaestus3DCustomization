@@ -75,6 +75,27 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
         }
 
         [Test]
+        public void EquippedItems_SameSnapshotUntilItemsChange()
+        {
+            var shirt = CreateSkinnedItem("Shirt", _torso);
+
+            var empty = _wearer.EquippedItems;
+            Assert.That(_wearer.EquippedItems, Is.SameAs(empty));
+
+            _wearer.EquipAsync(shirt).Wait();
+            var worn = _wearer.EquippedItems;
+
+            Assert.That(empty, Is.Empty);
+            Assert.That(worn, Is.EqualTo(new[] { shirt }));
+            Assert.That(_wearer.EquippedItems, Is.SameAs(worn));
+
+            _wearer.Unequip(_torso);
+
+            Assert.That(worn, Is.EqualTo(new[] { shirt }), "a snapshot doesn't change");
+            Assert.That(_wearer.EquippedItems, Is.Empty);
+        }
+
+        [Test]
         public void Equip_SameItemTwice_LoadsOnce()
         {
             var shirt = CreateSkinnedItem("Shirt", _torso);
