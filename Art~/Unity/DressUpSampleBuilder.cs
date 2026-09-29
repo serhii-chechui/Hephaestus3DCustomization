@@ -12,7 +12,8 @@ public static class DressUpSampleBuilder
 {
     private const string Root = "Assets/Samples/DressUp";
     private const string Models = Root + "/Models";
-    private const string IdlePath = Root + "/Animation/Idle.fbx";
+    // Humanoid clip extracted by ExtractIdleClip from Quaternius' Universal Animation Library (CC0).
+    private const string IdlePath = Root + "/Animation/Idle.anim";
 
     private static readonly string[] Suits = { "TShirtJeans", "DenimShirt", "BlackSuit", "Overalls" };
     private static readonly string[] LongSleeveSuits = { "DenimShirt", "BlackSuit" };
@@ -101,31 +102,8 @@ public static class DressUpSampleBuilder
             importer.SaveAndReimport();
         }
 
-        var idle = (ModelImporter)AssetImporter.GetAtPath(IdlePath);
-        idle.animationType = ModelImporterAnimationType.Human;
-        idle.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-        idle.importAnimation = true;
-        var clips = idle.defaultClipAnimations;
-        foreach (var clip in clips)
-        {
-            clip.name = "Idle";
-            clip.loopTime = true;
-            clip.lockRootRotation = true;
-            clip.lockRootHeightY = true;
-            clip.lockRootPositionXZ = true;
-            // Face the way the body faces, whatever orientation the source skeleton had.
-            clip.keepOriginalOrientation = false;
-            clip.keepOriginalPositionY = true;
-            clip.keepOriginalPositionXZ = true;
-        }
-        idle.clipAnimations = clips;
-        idle.SaveAndReimport();
-
-        foreach (var path in new[] { $"{Models}/Character.fbx", IdlePath })
-        {
-            var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().First();
-            Debug.Log($"[DressUpSampleBuilder] {path}: avatar human {avatar.isHuman}, valid {avatar.isValid}");
-        }
+        var avatar = AssetDatabase.LoadAllAssetsAtPath($"{Models}/Character.fbx").OfType<Avatar>().First();
+        Debug.Log($"[DressUpSampleBuilder] Character avatar: human {avatar.isHuman}, valid {avatar.isValid}");
     }
 
     private static GameObject BuildCharacter(OutfitSlot hatSlot, Dictionary<string, OutfitBodyPart> parts, Vector3 socketPosition)
@@ -133,7 +111,7 @@ public static class DressUpSampleBuilder
         var character = (GameObject)PrefabUtility.InstantiatePrefab(LoadModel("Character"));
         character.name = "Character";
 
-        var clip = AssetDatabase.LoadAllAssetsAtPath(IdlePath).OfType<AnimationClip>().First(c => !c.name.StartsWith("__preview"));
+        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(IdlePath);
         var controller = AnimatorController.CreateAnimatorControllerAtPathWithClip($"{Root}/Animation/Character.controller", clip);
         var animator = character.GetComponent<Animator>();
         animator.runtimeAnimatorController = controller;

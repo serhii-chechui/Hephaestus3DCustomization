@@ -8,7 +8,7 @@ Requirements: Blender 4.2+, the MPFB 2 extension and the MakeHuman system assets
 Writes:
 - Character.fbx: the game_engine rig in T-pose (for Unity's Humanoid retargeting), the body
   split into parts that clothes can hide (Body, Body_TorsoAndLegs, Body_Arms, Body_Feet)
-  and the eyes. The sample animates it with a Humanoid clip (Art~/Animations/Idle.fbx).
+  and the eyes. The sample animates it with a Humanoid clip (Animation/Idle.anim).
 - One FBX per skinned item (suits and shoes). Every item carries its own copy of the rig,
   the way clothes are exported for rebinding to the character's skeleton at runtime.
 - One FBX per hat. Hats are rigid (no rig) and stay where they sit on the head, so the

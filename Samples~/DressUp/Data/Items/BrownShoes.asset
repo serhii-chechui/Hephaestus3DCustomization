@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e9ba028829824a89b94fc3b0e255082, type: 3}
   m_Name: BrownShoes
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitItem
-  _slot: {fileID: 11400000, guid: 70b36d31842a24987b2b9697debb55fe, type: 2}
+  _slot: {fileID: 11400000, guid: a96ed60a4d4b34c0794427abddd631e5, type: 2}
   _attachMode: 0
   _assetKey: BrownShoes
   _hiddenBodyParts:
-  - {fileID: 11400000, guid: 0e4e479401b0641d38a86dd2de214c89, type: 2}
+  - {fileID: 11400000, guid: e23d7b5eb908247e6ac4a52beac212a6, type: 2}

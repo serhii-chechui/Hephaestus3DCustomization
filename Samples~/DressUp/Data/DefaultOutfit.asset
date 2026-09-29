@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: DefaultOutfit
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitPreset
   _items:
-  - {fileID: 11400000, guid: 2267396db6c6a41d59bf78b98518af79, type: 2}
-  - {fileID: 11400000, guid: 8ff0c12ccf08c449c98c545ab8526243, type: 2}
+  - {fileID: 11400000, guid: 9d4efd53fc44342c3af32b9ef1688b53, type: 2}
+  - {fileID: 11400000, guid: c8f36888d20b14e1a8376d1a6e98c86b, type: 2}
