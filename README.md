@@ -132,7 +132,13 @@ public class Wardrobe
 - `EquipAsync(OutfitPreset)` equips a whole look.
 - `Equipped` / `Unequipped` events report changes, including an item replaced by another.
 - `Unequip` and `UnequipAll` also cancel pending requests.
-- Destroying the character releases every loaded prefab.
+- Requesting an item that is already loading into its slot returns that pending request
+  instead of loading it again.
+- A load that fails while its request is current faults the returned task; the failure of a
+  request that a newer one superseded is ignored.
+- Destroying the character releases every loaded prefab. Unity doesn't call `OnDestroy` on
+  objects that were never active, so call `wearer.Dispose()` before destroying such a
+  character; it takes every item off, releases the prefabs and cancels pending loads.
 
 ### Custom attach logic
 

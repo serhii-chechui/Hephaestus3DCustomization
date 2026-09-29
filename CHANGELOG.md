@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file in accordanc
 ## [1.0.2] - 2026-09-29
 
 ### fix
+- `OutfitWearer` releases the loaded prefab when an attach strategy throws, instead of leaking it.
+- A load that fails after a newer request superseded it no longer faults the superseded `EquipAsync`; it returns `false`.
+- Requesting an item that is already loading into its slot returns that pending request instead of loading the item twice.
+- `OutfitWearer` implements `IDisposable`: `Dispose()` takes every item off, releases the prefabs and cancels pending loads, for characters destroyed without ever being active (Unity skips `OnDestroy` for them).
 - Dress-Up sample: Foot IK is on for the idle state, so the feet stay planted on the floor.
 
 ## [1.0.1] - 2026-09-29
