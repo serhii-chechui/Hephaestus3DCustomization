@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7489380042520923949
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8539975958911330494}
+  - component: {fileID: 6252705232709307093}
+  m_Layer: 0
+  m_Name: SkinAfrican
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8539975958911330494
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7489380042520923949}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6252705232709307093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7489380042520923949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5218b0f973fc64fee966a2ac5a3eef31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitMaterialSet
+  _overrides:
+  - bodyPart: {fileID: 11400000, guid: 4d43ee17170d14454b0d127af2e0bd7e, type: 2}
+    materials:
+    - {fileID: -1433033680339509747, guid: 1fa7aae0a88da418e806319b8d958e58, type: 3}
+  - bodyPart: {fileID: 11400000, guid: b6bb6bad03b664fb1a138792598943cf, type: 2}
+    materials:
+    - {fileID: -1433033680339509747, guid: 1fa7aae0a88da418e806319b8d958e58, type: 3}
+  - bodyPart: {fileID: 11400000, guid: 8632cda5704c849aaa89013c1adf5def, type: 2}
+    materials:
+    - {fileID: -1433033680339509747, guid: 1fa7aae0a88da418e806319b8d958e58, type: 3}
+  - bodyPart: {fileID: 11400000, guid: e23d7b5eb908247e6ac4a52beac212a6, type: 2}
+    materials:
+    - {fileID: -1433033680339509747, guid: 1fa7aae0a88da418e806319b8d958e58, type: 3}

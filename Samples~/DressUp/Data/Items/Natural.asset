@@ -10,14 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9e9ba028829824a89b94fc3b0e255082, type: 3}
-  m_Name: DenimShirt
+  m_Name: Natural
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitItem
   _id: 
-  _slot: {fileID: 11400000, guid: bb09bc74564904498af59b95d8a4aa37, type: 2}
-  _attachMode: 0
-  _assetKey: DenimShirt
+  _slot: {fileID: 11400000, guid: 2922ac8ba530e40349c45daff04b97e5, type: 2}
+  _attachMode: 2
+  _assetKey: SkinNatural
   _socketId: 
   _customStrategy: {fileID: 0}
-  _hiddenBodyParts:
-  - {fileID: 11400000, guid: b6bb6bad03b664fb1a138792598943cf, type: 2}
-  - {fileID: 11400000, guid: 8632cda5704c849aaa89013c1adf5def, type: 2}
+  _hiddenBodyParts: []

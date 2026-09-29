@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
+## [1.1.1] - 2026-09-29
+
+### feat
+- Dress-Up sample shows the 1.1 API: skin tone `Material` items (MakeHuman CC0 skins), the natural skin as the wearer's default outfit, loading indicators per slot and failure messages, and Save look / Restore look through loadouts and an item catalog.
+
+### fix
+- `MaterialOutfitAttachStrategy` layers material items per renderer, so replacing a material item keeps the new item's materials. The wearer attaches the new item before it takes the old one off, and taking the old one off used to restore the materials it had replaced over the new ones.
+
 ## [1.1.0] - 2026-09-29
 
 ### feat

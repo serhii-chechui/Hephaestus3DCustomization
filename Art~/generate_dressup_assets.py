@@ -15,6 +15,9 @@ Writes:
   Unity side can derive the hat socket from them.
 - The JPEG textures next to the FBX files (Unity finds them by name and builds the
   materials for the project's render pipeline).
+- SkinTones.fbx: a tiny mesh that only carries one material per extra skin tone
+  (M_Skin_<Tone>), for the sample's material items; Unity builds the materials for the
+  project's render pipeline, as for every other FBX.
 - PhotoZone.fbx: a concave cylinder (normals facing inward) whose floor curves into the
   wall through a wide rounded bevel, a seamless backdrop for the character.
 - body_parts.json: which body parts every item hides.
@@ -52,6 +55,11 @@ SUITS = {
 SHOES = {"BrownShoes": "shoes01", "Boots": "shoes03", "Sneakers": "shoes06"}
 HATS = {"Fedora": "fedora01", "CockedFedora": "fedora_cocked"}
 SKIN = "skins/young_caucasian_male/young_lightskinned_male_diffuse.png"
+# Extra skin tones for the sample's material items; they share the body's UV layout.
+SKIN_TONES = {
+    "Asian": "skins/young_asian_male/young_lightskinned_male_diffuse3.png",
+    "African": "skins/young_african_male/young_darkskinned_male_diffuse.png",
+}
 EYES = "eyes/low-poly/low-poly.mhclo"
 EYE_TEXTURE = "eyes/materials/brown_eye.png"
 
@@ -146,6 +154,25 @@ def keep_faces(obj, predicate):
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     bm.to_mesh(obj.data)
     bm.free()
+
+
+def create_skin_tones():
+    """One triangle per tone, each with its material, so the FBX carries the materials."""
+    mesh = bpy.data.meshes.new("SkinTones")
+    vertices, faces = [], []
+    for index in range(len(SKIN_TONES)):
+        x = index * 0.02
+        vertices += [(x, 0.0, 0.0), (x + 0.01, 0.0, 0.0), (x, 0.0, 0.01)]
+        faces.append((index * 3, index * 3 + 1, index * 3 + 2))
+    mesh.from_pydata(vertices, [], faces)
+
+    for index, (tone, texture) in enumerate(SKIN_TONES.items()):
+        mesh.materials.append(textured_material("M_Skin_" + tone, os.path.join(DATA, texture)))
+        mesh.polygons[index].material_index = index
+
+    tones = bpy.data.objects.new("SkinTones", mesh)
+    bpy.context.scene.collection.objects.link(tones)
+    return tones
 
 
 def create_photo_zone(radius=3.2, height=3.6, bevel=1.1, segments=96, bevel_steps=16):
@@ -291,6 +318,7 @@ def main():
     for hat_name in HATS:
         export(hat_name, [items[hat_name]])
     export("PhotoZone", [create_photo_zone()])
+    export("SkinTones", [create_skin_tones()])
 
     hides = {name: ["TorsoAndLegs"] + (["Arms"] if long_sleeves else []) for name, (_, long_sleeves) in SUITS.items()}
     hides.update({name: ["Feet"] for name in SHOES})

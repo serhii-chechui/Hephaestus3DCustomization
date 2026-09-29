@@ -28,6 +28,12 @@ MonoBehaviour:
   - assetKey: Boots
     prefab: {fileID: 919132149155446097, guid: 41b455e4bb7c5474c9669d16811edd4c, type: 3}
   - assetKey: Fedora
-    prefab: {fileID: 7271731954101152970, guid: 31705e96cf4a44d429d0c31b05a4b189, type: 3}
+    prefab: {fileID: 8177696061108826322, guid: 31705e96cf4a44d429d0c31b05a4b189, type: 3}
   - assetKey: CockedFedora
-    prefab: {fileID: 2678066800324697494, guid: db835a213b60b46568b6bc89df2a734d, type: 3}
+    prefab: {fileID: 4342070732231908455, guid: db835a213b60b46568b6bc89df2a734d, type: 3}
+  - assetKey: SkinNatural
+    prefab: {fileID: 752306463871463391, guid: 058a170fdf7924592815f4c59b430196, type: 3}
+  - assetKey: SkinAsian
+    prefab: {fileID: 5446971390541392948, guid: 54ab650e067d848c99cdbd0413a51763, type: 3}
+  - assetKey: SkinAfrican
+    prefab: {fileID: 7489380042520923949, guid: 1ff52d80d71414f2292cdf8333c45c7f, type: 3}
