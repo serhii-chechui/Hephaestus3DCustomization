@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7462249686020422640
+--- !u!1 &7173587108683923367
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 896956481896822095}
-  - component: {fileID: 2054919991370463555}
+  - component: {fileID: 7270109544582712953}
+  - component: {fileID: 4404385629533898086}
   m_Layer: 0
   m_Name: HatSocket
   m_TagString: Untagged
@@ -17,35 +17,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &896956481896822095
+--- !u!4 &7270109544582712953
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7462249686020422640}
+  m_GameObject: {fileID: 7173587108683923367}
   serializedVersion: 2
   m_LocalRotation: {x: 0.021035165, y: -0, z: -0, w: 0.99977875}
   m_LocalPosition: {x: 0.00079689175, y: 0.09480455, z: 0.013128078}
   m_LocalScale: {x: 1, y: 1.0000001, z: 1.0000004}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6155621890578672507}
+  m_Father: {fileID: 7314055873705236766}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2054919991370463555
+--- !u!114 &4404385629533898086
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7462249686020422640}
+  m_GameObject: {fileID: 7173587108683923367}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8d082d417101946a89dfb2f232b9683d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitSocket
   _slot: {fileID: 11400000, guid: a0e61e07614644fc3abaec62f0f826c5, type: 2}
---- !u!1001 &3753472273468021118
+  _socketId: 
+--- !u!1001 &358763270931671835
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -110,133 +111,158 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -2199398895508147707, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 896956481896822095}
+      addedObject: {fileID: 7270109544582712953}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8278157801319965502}
+      addedObject: {fileID: 6324911126089884941}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3882901326476405567}
+      addedObject: {fileID: 8925837522547873770}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7745568907661754464}
+      addedObject: {fileID: 7331105730421356774}
+    - targetCorrespondingSourceObject: {fileID: 635547659545568360, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7738284323927286608}
     - targetCorrespondingSourceObject: {fileID: 8304363922930341827, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2239957247163174023}
+      addedObject: {fileID: 2446876982583301255}
     - targetCorrespondingSourceObject: {fileID: -293237748068726376, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1589883038297930424}
+      addedObject: {fileID: 8324835284837414004}
     - targetCorrespondingSourceObject: {fileID: -1143921223391638367, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6846367873392750038}
+      addedObject: {fileID: 5749294760745963434}
   m_SourcePrefab: {fileID: 100100000, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
---- !u!4 &868187248639144126 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4042940087036422592, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
-  m_PrefabInstance: {fileID: 3753472273468021118}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &4095578510471193647 stripped
+--- !u!1 &593345517209769546 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
-  m_PrefabInstance: {fileID: 3753472273468021118}
+  m_PrefabInstance: {fileID: 358763270931671835}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8278157801319965502
+--- !u!114 &6324911126089884941
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4095578510471193647}
+  m_GameObject: {fileID: 593345517209769546}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da8634b0b71e64ca68c0f4bec825f4b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitSkeleton
-  _rootBone: {fileID: 868187248639144126}
---- !u!114 &3882901326476405567
+  _rootBone: {fileID: 4387066641920869083}
+  _boneAliases: []
+  _ignoreCase: 0
+  _ignoreNamespaces: 0
+--- !u!114 &8925837522547873770
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4095578510471193647}
+  m_GameObject: {fileID: 593345517209769546}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e72d84d95efb445a8c31cb1690e8c71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitWearer
-  _skeleton: {fileID: 8278157801319965502}
+  _skeleton: {fileID: 6324911126089884941}
   _matchLayer: 1
---- !u!114 &7745568907661754464
+  _defaultOutfit: {fileID: 11400000, guid: 944e8109bb63f42a1b16658084269b18, type: 2}
+--- !u!114 &7331105730421356774
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4095578510471193647}
+  m_GameObject: {fileID: 593345517209769546}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 59a2ea7c034f8472ab2152d06b8ae065, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization.samples.dressup::WTFGames.Hephaestus.Customization3D.Samples.DressUp.Turntable
   _degreesPerSecond: 20
---- !u!1 &4902443691225961951 stripped
+--- !u!1 &876933580265983859 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: -1143921223391638367, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
-  m_PrefabInstance: {fileID: 3753472273468021118}
+  m_CorrespondingSourceObject: {fileID: 635547659545568360, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
+  m_PrefabInstance: {fileID: 358763270931671835}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6846367873392750038
+--- !u!114 &7738284323927286608
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4902443691225961951}
+  m_GameObject: {fileID: 876933580265983859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7c45cac4154e4f5c83654f623779e20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitBodyPartRenderer
+  _bodyPart: {fileID: 11400000, guid: 4d43ee17170d14454b0d127af2e0bd7e, type: 2}
+--- !u!4 &4387066641920869083 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4042940087036422592, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
+  m_PrefabInstance: {fileID: 358763270931671835}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7314055873705236766 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -2199398895508147707, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
+  m_PrefabInstance: {fileID: 358763270931671835}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8423258516493494202 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -1143921223391638367, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
+  m_PrefabInstance: {fileID: 358763270931671835}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5749294760745963434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8423258516493494202}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7c45cac4154e4f5c83654f623779e20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitBodyPartRenderer
   _bodyPart: {fileID: 11400000, guid: b6bb6bad03b664fb1a138792598943cf, type: 2}
---- !u!1 &5127354601326235325 stripped
+--- !u!1 &8630466670911290584 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8304363922930341827, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
-  m_PrefabInstance: {fileID: 3753472273468021118}
+  m_PrefabInstance: {fileID: 358763270931671835}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2239957247163174023
+--- !u!114 &2446876982583301255
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5127354601326235325}
+  m_GameObject: {fileID: 8630466670911290584}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7c45cac4154e4f5c83654f623779e20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitBodyPartRenderer
   _bodyPart: {fileID: 11400000, guid: 8632cda5704c849aaa89013c1adf5def, type: 2}
---- !u!1 &5762697632714985702 stripped
+--- !u!1 &9157120521709953667 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -293237748068726376, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
-  m_PrefabInstance: {fileID: 3753472273468021118}
+  m_PrefabInstance: {fileID: 358763270931671835}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1589883038297930424
+--- !u!114 &8324835284837414004
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5762697632714985702}
+  m_GameObject: {fileID: 9157120521709953667}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7c45cac4154e4f5c83654f623779e20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitBodyPartRenderer
   _bodyPart: {fileID: 11400000, guid: e23d7b5eb908247e6ac4a52beac212a6, type: 2}
---- !u!4 &6155621890578672507 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -2199398895508147707, guid: f44197d00a9924faca58eabb7fcf3cb4, type: 3}
-  m_PrefabInstance: {fileID: 3753472273468021118}
-  m_PrefabAsset: {fileID: 0}

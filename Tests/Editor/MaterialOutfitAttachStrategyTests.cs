@@ -56,6 +56,30 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
         }
 
         [Test]
+        public void Detach_OfAnItemUnderAnother_KeepsTheTopItemsMaterials()
+        {
+            var natural = _strategy.Attach(CreateMaterialPrefab(_original), Context());
+            var tanned = _rig.Track(_strategy.Attach(CreateMaterialPrefab(_tanned), Context()));
+
+            // The wearer attaches the new item before it takes the old one off.
+            _strategy.Detach(natural);
+
+            Assert.That(_skinRenderer.sharedMaterial, Is.SameAs(_tanned));
+        }
+
+        [Test]
+        public void Detach_InAnyOrder_EndsWithTheRenderersOwnMaterials()
+        {
+            var first = _strategy.Attach(CreateMaterialPrefab(_tanned), Context());
+            var second = _strategy.Attach(CreateMaterialPrefab(_tanned), Context());
+
+            _strategy.Detach(first);
+            _strategy.Detach(second);
+
+            Assert.That(_skinRenderer.sharedMaterial, Is.SameAs(_original));
+        }
+
+        [Test]
         public void Attach_PrefabWithoutMaterialSet_ReturnsNull()
         {
             var prefab = _rig.Track(new GameObject("NoSet"));
@@ -64,10 +88,10 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
             Assert.That(_skinRenderer.sharedMaterial, Is.SameAs(_original));
         }
 
-        private GameObject CreateMaterialPrefab()
+        private GameObject CreateMaterialPrefab(Material material = null)
         {
-            var prefab = _rig.Track(new GameObject("Tan"));
-            prefab.AddComponent<OutfitMaterialSet>().Overrides.Add(new OutfitMaterialOverride { bodyPart = _skin, materials = new[] { _tanned } });
+            var prefab = _rig.Track(new GameObject("Skin"));
+            prefab.AddComponent<OutfitMaterialSet>().Overrides.Add(new OutfitMaterialOverride { bodyPart = _skin, materials = new[] { material != null ? material : _tanned } });
             return prefab;
         }
 

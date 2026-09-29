@@ -221,10 +221,14 @@ Import them from the package's page in the Package Manager:
 - **Dress-Up**: open `Scenes/DressUpSample` and press Play. A Humanoid MakeHuman character
   plays an idle clip in a photo zone (a concave cylinder whose floor curves into the wall through a
   wide rounded bevel) under three-point lighting: a white key light, a violet fill light and
-  a yellow rim light. The panel on the left changes its suit, shoes and hat. It shows the whole
+  a yellow rim light. The panel on the left changes its skin tone, suit, shoes and hat. It shows the whole
   pipeline: skinned suits and shoes exported with their own copy of the `game_engine` rig
   and rebound at runtime, fedoras on a head socket, body parts hidden under the clothes,
-  and a simulated load delay that a newer request overtakes. No extra packages needed;
+  and a simulated load delay that a newer request overtakes. It also shows the 1.1 API:
+  skin tones are `Material` items, the natural skin is the wearer's default outfit (**Take
+  everything off** returns to it), slots show when they are loading, and **Save look** /
+  **Restore look** store the outfit in `PlayerPrefs` as a loadout and apply it through the
+  item catalog. No extra packages needed;
   the FBX materials are created for the project's render pipeline (Built-in, URP, HDRP).
 - **Addressables Provider**: `AddressablesOutfitAssetProvider` over Hephaestus
   Addressables (it loads each address once and counts its users),
@@ -245,7 +249,8 @@ Blender --background --python "Art~/generate_dressup_assets.py" -- <output folde
 ```
 
 It needs Blender 4.2+, MPFB 2 and the `makehuman_system_assets_cc0.zip` pack loaded into
-MPFB. It writes the FBX files (including the photo zone), their textures and
+MPFB. It writes the FBX files (including the photo zone and `SkinTones.fbx`, which only
+carries the extra skin materials), their textures and
 `body_parts.json` (which body parts each item hides). The character and every item are
 posed in MakeHuman's T-pose, which becomes their rest pose, so Unity's Humanoid retargeting
 maps clips from other skeletons correctly.

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a1a280ad83814595984dbce998efa6c, type: 3}
+  m_Name: OutfitItemCatalog
+  m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitItemCatalog
+  _items:
+  - {fileID: 11400000, guid: 7344e0b8e0c434f0d99f48829f3457f8, type: 2}
+  - {fileID: 11400000, guid: 2d56cc4fb308a41b1a6bd1ea8656234d, type: 2}
+  - {fileID: 11400000, guid: 885842170d6be426483a9f8e38035668, type: 2}
+  - {fileID: 11400000, guid: 9d4efd53fc44342c3af32b9ef1688b53, type: 2}
+  - {fileID: 11400000, guid: 62a52b51a1a364a7aa5422dec25e87ab, type: 2}
+  - {fileID: 11400000, guid: 453e193b7207146a4ab505fbef8ae5e5, type: 2}
+  - {fileID: 11400000, guid: 0d3748a4b9f57493d9d35bb7f9d255a4, type: 2}
+  - {fileID: 11400000, guid: c8f36888d20b14e1a8376d1a6e98c86b, type: 2}
+  - {fileID: 11400000, guid: 52cee6da1a5d4434a885c1436374b865, type: 2}
+  - {fileID: 11400000, guid: ec3b00463b24a489cb41bdcd026c936d, type: 2}
+  - {fileID: 11400000, guid: 2bb5eee962ffa44038648220565f731a, type: 2}
+  - {fileID: 11400000, guid: 78f6f5279214e4c6fb803835e736dbc5, type: 2}
