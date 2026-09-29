@@ -66,12 +66,14 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
             return item;
         }
 
-        public Transform CreateSocket(OutfitSkeleton skeleton, string boneName, OutfitSlot slot)
+        public Transform CreateSocket(OutfitSkeleton skeleton, string boneName, OutfitSlot slot, string socketId = null)
         {
             skeleton.TryGetBone(boneName, out var bone);
 
-            var socket = CreateChild(slot.DisplayName + "Socket", bone, new Vector3(0f, 0.1f, 0f));
-            socket.gameObject.AddComponent<OutfitSocket>().Slot = slot;
+            var socket = CreateChild(slot.DisplayName + socketId + "Socket", bone, new Vector3(0f, 0.1f, 0f));
+            var component = socket.gameObject.AddComponent<OutfitSocket>();
+            component.Slot = slot;
+            component.SocketId = socketId;
             skeleton.Rebuild();
 
             return socket;

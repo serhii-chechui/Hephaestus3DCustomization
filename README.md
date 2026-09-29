@@ -10,13 +10,19 @@ skinned clothes are rebound to the character's skeleton so they animate with the
 - **Skinned items** (shirts, pants, shoes, hair) are rebound to the character's bones by
   name. The meshes keep the bone weights they were exported with, so they deform exactly
   like the body.
-- **Socket items** (hats, watches, glasses) are parented to a socket on the character.
+- **Socket items** (hats, watches, glasses) are parented to a socket on the character;
+  a slot can have several sockets (left and right earring).
+- **Material items** (skin tone, tattoos, make-up) change materials of body parts.
+- **Custom items** bring their own attach strategy asset.
 - **Body parts under clothes are hidden**, so the skin never pokes through when the body
   bends.
 - Any asset source: Addressables, asset bundles, Resources or procedural content, behind
   the `IOutfitAssetProvider` interface.
 - Asynchronous and race-safe: a newer request for a slot supersedes a pending one, and
   every loaded prefab is released exactly once.
+- Loadouts: save what a character wears as item ids and restore it later.
+- A default outfit that slots fall back to when their item is taken off.
+- Items made on other rigs: bone aliases, case-insensitive and namespace-free bone matching.
 - Replaceable attach strategies per attach mode.
 - No dependencies.
 
@@ -81,9 +87,11 @@ Create the assets via **Create > HephaestusMobile > 3D > Customization**:
 
 - **Outfit Slot**: a place that holds one item (Head, Torso, Legs, Feet, ...).
 - **Outfit Body Part**: a part of the body that clothes can cover.
-- **Outfit Item**: the item's slot, attach mode (`Skinned` or `Socket`), asset key, which
-  your provider resolves to the prefab (for Addressables: the address), and the body parts
-  it hides.
+- **Outfit Item**: the item's id (defaults to the asset name), slot, attach mode
+  (`Skinned`, `Socket`, `Material` or `Custom`), asset key, which your provider resolves to
+  the prefab (for Addressables: the address), and the body parts it hides. Socket items can
+  name a socket id, custom items their strategy asset.
+- **Outfit Item Catalog**: the items a saved loadout can refer to.
 - **Outfit Preset**: a set of items equipped together, e.g. a default outfit. When several
   items share a slot, the last one wins.
 
@@ -92,7 +100,8 @@ Create the assets via **Create > HephaestusMobile > 3D > Customization**:
 On the character's root:
 
 - `OutfitSkeleton`: set **Root Bone** to the top bone of the skeleton.
-- `OutfitWearer`: finds the `OutfitSkeleton` on the same object or its children.
+- `OutfitWearer`: finds the `OutfitSkeleton` on the same object or its children. Its
+  **Default Outfit** is optional (see below).
 - For socket items, add an empty child under the bone the item should follow (e.g. a
   `HatSocket` under the head) with an `OutfitSocket` for the item's slot. The item's
   prefab keeps its local offset from the socket.
@@ -132,12 +141,74 @@ public class Wardrobe
 - `EquipAsync(OutfitPreset)` equips a whole look.
 - `Equipped` / `Unequipped` events report changes, including an item replaced by another.
 - `Unequip` and `UnequipAll` also cancel pending requests.
-- Destroying the character releases every loaded prefab.
+- Requesting an item that is already loading into its slot returns that pending request
+  instead of loading it again.
+- A load that fails while its request is current faults the returned task; the failure of a
+  request that a newer one superseded is ignored.
+- Destroying the character releases every loaded prefab. Unity doesn't call `OnDestroy` on
+  objects that were never active, so call `wearer.Dispose()` before destroying such a
+  character; it takes every item off, releases the prefabs and cancels pending loads.
+
+- `IsLoading(slot)` tells whether an item is on its way into a slot, e.g. to show a spinner;
+  `EquipFailed` reports items a current request couldn't put on (load error, missing prefab,
+  attach failure). Both are on `IOutfitLoadingStatus`, which `OutfitWearer` implements.
+
+### Saving and restoring outfits
+
+`GetLoadout()` returns the ids of the worn items; `OutfitLoadout` serializes with
+`JsonUtility`. Both calls below are on `IOutfitLoadoutWearer`, which extends `IOutfitWearer`
+and which `OutfitWearer` implements. `ApplyLoadoutAsync` makes the character wear exactly that loadout, resolving
+ids through an `IOutfitItemCatalog`, e.g. an **Outfit Item Catalog** asset:
+
+```csharp
+PlayerPrefs.SetString("outfit", JsonUtility.ToJson(wearer.GetLoadout()));
+
+var loadout = JsonUtility.FromJson<OutfitLoadout>(PlayerPrefs.GetString("outfit"));
+await wearer.ApplyLoadoutAsync(loadout, catalog);
+```
+
+Give items explicit ids when their asset names may change; ids the catalog doesn't know
+are skipped with a warning.
+
+### Default outfit
+
+Items of the wearer's **Default Outfit** are what slots fall back to (underwear, bare
+feet): `Unequip(slot)` puts the slot's default item back on, `UnequipAll()` returns to the
+default outfit, and `EquipDefaultOutfitAsync()` fills the empty slots, e.g. after spawning.
+Unequipping a slot that already wears its default item leaves the slot empty.
+
+### Items from other rigs
+
+Skinned items bind to bones with the same names. When items come from a rig with other
+names, set on `OutfitSkeleton`:
+
+- **Bone Aliases**: item bone name → character bone name (`Head` → `head`);
+- **Ignore Case**: `Spine` matches `spine`;
+- **Ignore Namespaces**: `mixamorig:Hips` matches `Hips`.
+
+Exact names always win; call `Rebuild()` after changing these at runtime.
+
+### Several sockets per slot
+
+Give sockets of one slot different **Socket Id**s (e.g. `Left` and `Right` under the ears)
+and set the same id on the socket items. Items and sockets without an id use the slot's
+default socket.
+
+### Material items
+
+A `Material` item doesn't add geometry: its prefab holds an `OutfitMaterialSet` listing
+materials per body part, which replace the materials of those body parts' renderers while
+the item is worn. Give material items their own slot (e.g. `SkinTone`), so two of them never
+change the same body part at once.
 
 ### Custom attach logic
 
-Replace the strategy of an attach mode with your own `IOutfitAttachStrategy`, e.g. to pool
-instances or to hide body parts under clothes:
+An item with the `Custom` attach mode is put on by its own strategy asset: derive from
+`OutfitAttachStrategyAsset` and assign the asset to the item. One asset serves every
+character, so keep per-character state on the instance it returns.
+
+To change how a built-in mode works for a character, replace its strategy, e.g. to pool
+instances:
 
 ```csharp
 wearer.SetStrategy(new MySkinnedStrategy());

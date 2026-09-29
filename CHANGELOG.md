@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
+## [1.1.0] - 2026-09-29
+
+### feat
+- Item ids and loadouts: `OutfitItem.Id` (defaults to the asset name), `GetLoadout()` and `ApplyLoadoutAsync()` on the new `IOutfitLoadoutWearer` (extends `IOutfitWearer`), resolving ids through `IOutfitItemCatalog` / the `OutfitItemCatalog` asset. `OutfitLoadout` serializes with JsonUtility.
+- Default outfit: `OutfitWearer.DefaultOutfit` is what slots fall back to; `Unequip` puts the slot's default item back on, `UnequipAll` returns to the default outfit, `EquipDefaultOutfitAsync` fills empty slots.
+- `Material` attach mode: `MaterialOutfitAttachStrategy` puts the materials of the prefab's `OutfitMaterialSet` on body part renderers and restores them on detach.
+- `Custom` attach mode: items can bring their own `OutfitAttachStrategyAsset`.
+- Several sockets per slot: `OutfitSocket.SocketId` and `OutfitItem.SocketId`; `OutfitSkeleton.TryGetSocket(slot, socketId, …)`.
+- Bone matching for items from other rigs: `OutfitSkeleton` bone aliases, case-insensitive and namespace-free matching.
+- `IsLoading(slot)` and the `EquipFailed` event on the new `IOutfitLoadingStatus`.
+- `IOutfitWearer` is unchanged; `OutfitWearer` implements the new interfaces.
+
+### fix
+- `OutfitWearer` releases the loaded prefab when an attach strategy throws, instead of leaking it.
+- A load that fails after a newer request superseded it no longer faults the superseded `EquipAsync`; it returns `false`.
+- Requesting an item that is already loading into its slot returns that pending request instead of loading the item twice.
+- `OutfitWearer` implements `IDisposable`: `Dispose()` takes every item off, releases the prefabs and cancels pending loads, for characters destroyed without ever being active (Unity skips `OnDestroy` for them).
+- Dress-Up sample: Foot IK is on for the idle state, so the feet stay planted on the floor.
+
 ## [1.0.1] - 2026-09-29
 
 ### fix

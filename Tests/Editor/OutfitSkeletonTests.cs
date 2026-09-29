@@ -56,5 +56,57 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
             Assert.That(skeleton.TryGetSocket(slot, out var found), Is.True);
             Assert.That(found, Is.SameAs(socket));
         }
+
+        [Test]
+        public void TryGetBone_UsesAliases()
+        {
+            _rig.CreateCharacter(out var skeleton);
+            skeleton.BoneAliases.Add(new OutfitBoneAlias { alias = "Chest", bone = "Spine" });
+            skeleton.Rebuild();
+
+            Assert.That(skeleton.TryGetBone("Chest", out var bone), Is.True);
+            Assert.That(bone.name, Is.EqualTo("Spine"));
+        }
+
+        [Test]
+        public void TryGetBone_IgnoresCaseOnlyWhenEnabled()
+        {
+            _rig.CreateCharacter(out var skeleton);
+
+            Assert.That(skeleton.TryGetBone("spine", out _), Is.False);
+
+            skeleton.IgnoreCase = true;
+
+            Assert.That(skeleton.TryGetBone("spine", out var bone), Is.True);
+            Assert.That(bone.name, Is.EqualTo("Spine"));
+        }
+
+        [Test]
+        public void TryGetBone_IgnoresNamespacesOnlyWhenEnabled()
+        {
+            _rig.CreateCharacter(out var skeleton);
+
+            Assert.That(skeleton.TryGetBone("mixamorig:Hips", out _), Is.False);
+
+            skeleton.IgnoreNamespaces = true;
+
+            Assert.That(skeleton.TryGetBone("mixamorig:Hips", out var bone), Is.True);
+            Assert.That(bone.name, Is.EqualTo("Hips"));
+        }
+
+        [Test]
+        public void TryGetSocket_TellsSocketsOfOneSlotApartById()
+        {
+            _rig.CreateCharacter(out var skeleton);
+            var ears = _rig.Track(OutfitSlot.Create("Ears"));
+            var left = _rig.CreateSocket(skeleton, "Head", ears, "Left");
+            var right = _rig.CreateSocket(skeleton, "Head", ears, "Right");
+
+            Assert.That(skeleton.TryGetSocket(ears, "Left", out var foundLeft), Is.True);
+            Assert.That(skeleton.TryGetSocket(ears, "Right", out var foundRight), Is.True);
+            Assert.That(foundLeft, Is.SameAs(left));
+            Assert.That(foundRight, Is.SameAs(right));
+            Assert.That(skeleton.TryGetSocket(ears, out _), Is.False);
+        }
     }
 }
