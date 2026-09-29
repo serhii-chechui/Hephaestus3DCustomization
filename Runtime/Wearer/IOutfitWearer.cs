@@ -22,7 +22,10 @@ namespace WTFGames.Hephaestus.Customization3D
         /// <summary>
         /// Loads and puts on <paramref name="item"/>, replacing the item in its slot. A later
         /// request for the same slot supersedes this one. Returns true when the item ends up
-        /// worn, false when the request was superseded, cancelled or failed.
+        /// worn, false when the request was superseded or cancelled, or the prefab wasn't found.
+        /// A load that fails while the request is still current faults the task; a failure of a
+        /// superseded request is ignored. Requesting an item that is already loading into its
+        /// slot returns that pending request.
         /// </summary>
         Task<bool> EquipAsync(OutfitItem item, CancellationToken cancellationToken = default);
 

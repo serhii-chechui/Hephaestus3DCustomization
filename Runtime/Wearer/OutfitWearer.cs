@@ -13,7 +13,7 @@ namespace WTFGames.Hephaestus.Customization3D
     /// Call <see cref="Construct"/> before equipping.
     /// </summary>
     [DisallowMultipleComponent]
-    public class OutfitWearer : MonoBehaviour, IOutfitWearer
+    public class OutfitWearer : MonoBehaviour, IOutfitWearer, IDisposable
     {
         private const string LogTag = "[Hephaestus 3D Customization]";
 
@@ -27,11 +27,12 @@ namespace WTFGames.Hephaestus.Customization3D
 
         private readonly Dictionary<OutfitSlot, EquippedOutfit> _equipped = new Dictionary<OutfitSlot, EquippedOutfit>();
         private readonly Dictionary<OutfitSlot, int> _requestIds = new Dictionary<OutfitSlot, int>();
+        private readonly Dictionary<OutfitSlot, PendingEquip> _pending = new Dictionary<OutfitSlot, PendingEquip>();
         private readonly Dictionary<OutfitAttachMode, IOutfitAttachStrategy> _strategies = new Dictionary<OutfitAttachMode, IOutfitAttachStrategy>();
         private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
 
         private IOutfitAssetProvider _provider;
-        private bool _isDestroyed;
+        private bool _isDisposed;
 
         public event Action<OutfitItem> Equipped;
 
@@ -92,7 +93,11 @@ namespace WTFGames.Hephaestus.Customization3D
             return false;
         }
 
-        public async Task<bool> EquipAsync(OutfitItem item, CancellationToken cancellationToken = default)
+        /// <remarks>
+        /// Requesting an item that is already loading into its slot returns that request;
+        /// <paramref name="cancellationToken"/> then doesn't cancel it.
+        /// </remarks>
+        public Task<bool> EquipAsync(OutfitItem item, CancellationToken cancellationToken = default)
         {
             if (item == null) throw new ArgumentNullException(nameof(item));
 
@@ -101,72 +106,35 @@ namespace WTFGames.Hephaestus.Customization3D
                 throw new InvalidOperationException($"{LogTag} {nameof(OutfitWearer)} on '{name}' has no asset provider; call {nameof(Construct)} first.");
             }
 
-            if (_isDestroyed) return false;
+            if (_isDisposed) return Task.FromResult(false);
 
             var slot = item.Slot;
 
             if (slot == null)
             {
                 Debug.LogError($"{LogTag} Item '{item.name}' has no slot.", item);
-                return false;
+                return Task.FromResult(false);
             }
 
             if (Skeleton == null)
             {
                 Debug.LogError($"{LogTag} {nameof(OutfitWearer)} on '{name}' has no {nameof(OutfitSkeleton)}.", this);
-                return false;
+                return Task.FromResult(false);
             }
+
+            // The same item is already on its way into this slot: share that load.
+            if (_pending.TryGetValue(slot, out var pending) && pending.Item == item) return pending.Task;
 
             // A new request supersedes the pending one for the same slot.
             var requestId = NextRequestId(slot);
 
-            if (_equipped.TryGetValue(slot, out var current) && current.Item == item) return true;
+            if (_equipped.TryGetValue(slot, out var current) && current.Item == item) return Task.FromResult(true);
 
-            GameObject prefab;
+            var request = LoadAndAttachAsync(item, slot, requestId, cancellationToken);
 
-            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token))
-            {
-                try
-                {
-                    prefab = await _provider.LoadAsync(item, linked.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    return false;
-                }
+            if (!request.IsCompleted) _pending[slot] = new PendingEquip(item, requestId, request);
 
-                if (_isDestroyed || linked.IsCancellationRequested || !IsCurrentRequest(slot, requestId))
-                {
-                    if (prefab != null) _provider.Release(item, prefab);
-                    return false;
-                }
-            }
-
-            if (prefab == null)
-            {
-                Debug.LogError($"{LogTag} Prefab '{item.AssetKey}' of item '{item.name}' wasn't loaded.", item);
-                return false;
-            }
-
-            var strategy = GetStrategy(item.AttachMode);
-            var instance = strategy.Attach(prefab, new OutfitAttachContext(item, Skeleton, transform));
-
-            if (instance == null)
-            {
-                _provider.Release(item, prefab);
-                return false;
-            }
-
-            instance.AddComponent<OutfitInstance>().Item = item;
-
-            if (_matchLayer) OutfitObjectUtility.SetLayerRecursively(instance, gameObject.layer);
-
-            TakeOff(slot);
-            _equipped[slot] = new EquippedOutfit(item, prefab, instance, strategy);
-            RefreshBodyParts();
-            Equipped?.Invoke(item);
-
-            return true;
+            return request;
         }
 
         public async Task<bool> EquipAsync(OutfitPreset preset, CancellationToken cancellationToken = default)
@@ -212,19 +180,112 @@ namespace WTFGames.Hephaestus.Customization3D
             RefreshBodyParts();
         }
 
+        /// <summary>
+        /// Takes every item off, releases every loaded prefab and cancels pending loads; the
+        /// wearer can't equip afterwards. Destroying the GameObject does the same, but Unity
+        /// doesn't call OnDestroy on objects that were never active: dispose such a character
+        /// before destroying it.
+        /// </summary>
+        public void Dispose()
+        {
+            Shutdown(detachInstances: true);
+        }
+
         private void OnDestroy()
         {
-            _isDestroyed = true;
+            // The instances are destroyed with this hierarchy; only the prefabs are released.
+            Shutdown(detachInstances: false);
+        }
+
+        private async Task<bool> LoadAndAttachAsync(OutfitItem item, OutfitSlot slot, int requestId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                GameObject prefab;
+
+                using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token))
+                {
+                    try
+                    {
+                        prefab = await _provider.LoadAsync(item, linked.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return false;
+                    }
+                    catch (Exception) when (!IsRequestAlive(slot, requestId, linked.Token))
+                    {
+                        // Nobody waits for this item any more, so its failure doesn't matter.
+                        return false;
+                    }
+
+                    if (!IsRequestAlive(slot, requestId, linked.Token))
+                    {
+                        if (prefab != null) _provider.Release(item, prefab);
+                        return false;
+                    }
+                }
+
+                if (prefab == null)
+                {
+                    Debug.LogError($"{LogTag} Prefab '{item.AssetKey}' of item '{item.name}' wasn't loaded.", item);
+                    return false;
+                }
+
+                var strategy = GetStrategy(item.AttachMode);
+                GameObject instance;
+
+                try
+                {
+                    instance = strategy.Attach(prefab, new OutfitAttachContext(item, Skeleton, transform));
+                }
+                catch
+                {
+                    _provider.Release(item, prefab);
+                    throw;
+                }
+
+                if (instance == null)
+                {
+                    _provider.Release(item, prefab);
+                    return false;
+                }
+
+                instance.AddComponent<OutfitInstance>().Item = item;
+
+                if (_matchLayer) OutfitObjectUtility.SetLayerRecursively(instance, gameObject.layer);
+
+                TakeOff(slot);
+                _equipped[slot] = new EquippedOutfit(item, prefab, instance, strategy);
+                RefreshBodyParts();
+                Equipped?.Invoke(item);
+
+                return true;
+            }
+            finally
+            {
+                if (_pending.TryGetValue(slot, out var pending) && pending.RequestId == requestId) _pending.Remove(slot);
+            }
+        }
+
+        private void Shutdown(bool detachInstances)
+        {
+            if (_isDisposed) return;
+
+            _isDisposed = true;
             _lifetime.Cancel();
             _lifetime.Dispose();
+            _pending.Clear();
 
-            // The instances are destroyed with this hierarchy; only the prefabs are released.
             foreach (var equipped in _equipped.Values)
             {
+                if (detachInstances) equipped.Strategy.Detach(equipped.Instance);
                 _provider?.Release(equipped.Item, equipped.Prefab);
             }
 
             _equipped.Clear();
+
+            if (detachInstances) RefreshBodyParts();
         }
 
         private bool TakeOff(OutfitSlot slot)
@@ -289,14 +350,18 @@ namespace WTFGames.Hephaestus.Customization3D
 
         private int NextRequestId(OutfitSlot slot)
         {
+            _pending.Remove(slot);
             _requestIds.TryGetValue(slot, out var id);
             _requestIds[slot] = ++id;
             return id;
         }
 
-        private bool IsCurrentRequest(OutfitSlot slot, int requestId)
+        private bool IsRequestAlive(OutfitSlot slot, int requestId, CancellationToken cancellationToken)
         {
-            return _requestIds.TryGetValue(slot, out var id) && id == requestId;
+            return !_isDisposed
+                   && !cancellationToken.IsCancellationRequested
+                   && _requestIds.TryGetValue(slot, out var id)
+                   && id == requestId;
         }
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "com.wtfgames.hephaestus.3d.customization",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "Hephaestus 3D Customization",
   "description": "Hephaestus 3D Customization is a part of the Hephaestus framework. It dresses 3D characters: skinned outfit items are rebound to the character's skeleton by bone name, rigid items are attached to sockets, covered body parts are hidden, and the assets come from any loader behind a small provider interface.",
   "license": "GPL-3.0-or-later",

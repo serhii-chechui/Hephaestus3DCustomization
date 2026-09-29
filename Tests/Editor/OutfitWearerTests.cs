@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -201,6 +202,104 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
 
             Assert.That(result, Is.True);
             Assert.That(strategy.AttachCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Equip_AttachThrows_ReleasesPrefabAndRethrows()
+        {
+            _wearer.SetStrategy(new ThrowingAttachStrategy());
+            var shirt = CreateSkinnedItem("Shirt", _torso);
+
+            Assert.That(() => _wearer.EquipAsync(shirt).GetAwaiter().GetResult(), Throws.InstanceOf<InvalidOperationException>());
+            Assert.That(_provider.Released.Count, Is.EqualTo(1));
+            Assert.That(_wearer.EquippedItems, Is.Empty);
+        }
+
+        [Test]
+        public void Equip_SupersededLoadFails_ReturnsFalseWithoutThrowing()
+        {
+            var slowShirt = CreateSkinnedItem("SlowShirt", _torso, deferred: true);
+            var jacket = CreateSkinnedItem("Jacket", _torso);
+
+            var slowRequest = _wearer.EquipAsync(slowShirt);
+            _wearer.EquipAsync(jacket).Wait();
+            _provider.Fail(slowShirt.AssetKey, new InvalidOperationException("Download failed."));
+
+            Assert.That(slowRequest.Status, Is.EqualTo(TaskStatus.RanToCompletion));
+            Assert.That(slowRequest.Result, Is.False);
+            Assert.That(_wearer.EquippedItems, Is.EqualTo(new[] { jacket }));
+        }
+
+        [Test]
+        public void Equip_CurrentLoadFails_FaultsTheRequest()
+        {
+            var slowShirt = CreateSkinnedItem("SlowShirt", _torso, deferred: true);
+
+            var request = _wearer.EquipAsync(slowShirt);
+            _provider.Fail(slowShirt.AssetKey, new InvalidOperationException("Download failed."));
+
+            Assert.That(request.IsFaulted, Is.True);
+            Assert.That(_wearer.EquippedItems, Is.Empty);
+        }
+
+        [Test]
+        public void Equip_SameItemWhileLoading_SharesTheLoad()
+        {
+            var slowShirt = CreateSkinnedItem("SlowShirt", _torso, deferred: true);
+
+            var first = _wearer.EquipAsync(slowShirt);
+            var second = _wearer.EquipAsync(slowShirt);
+            _provider.Complete(slowShirt.AssetKey);
+
+            Assert.That(second, Is.SameAs(first));
+            Assert.That(first.Result, Is.True);
+            Assert.That(_provider.LoadCount, Is.EqualTo(1));
+            Assert.That(_wearer.GetComponentsInChildren<OutfitInstance>().Length, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Equip_SameItemAfterUnequip_StartsNewLoad()
+        {
+            var slowShirt = CreateSkinnedItem("SlowShirt", _torso, deferred: true);
+
+            var first = _wearer.EquipAsync(slowShirt);
+            _wearer.Unequip(_torso);
+            var second = _wearer.EquipAsync(slowShirt);
+            _provider.Complete(slowShirt.AssetKey);
+
+            Assert.That(first.Result, Is.False);
+            Assert.That(second.Result, Is.True);
+            Assert.That(_provider.LoadCount, Is.EqualTo(2));
+            Assert.That(_provider.Released.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Dispose_TakesItemsOffAndReleasesPrefabs()
+        {
+            var torso = _rig.Track(OutfitBodyPart.Create("Torso"));
+            var torsoRenderer = _rig.CreateBodyPart(_skeleton, torso);
+            _wearer.EquipAsync(CreateSkinnedItem("Shirt", _torso, hiddenBodyParts: new[] { torso })).Wait();
+
+            _wearer.Dispose();
+
+            Assert.That(_provider.Released.Count, Is.EqualTo(1));
+            Assert.That(_wearer.GetComponentsInChildren<OutfitInstance>(), Is.Empty);
+            Assert.That(_wearer.EquippedItems, Is.Empty);
+            Assert.That(torsoRenderer.enabled, Is.True);
+        }
+
+        [Test]
+        public void Dispose_CancelsPendingLoadsAndStopsEquipping()
+        {
+            var slowShirt = CreateSkinnedItem("SlowShirt", _torso, deferred: true);
+            var request = _wearer.EquipAsync(slowShirt);
+
+            _wearer.Dispose();
+            _provider.Complete(slowShirt.AssetKey);
+
+            Assert.That(request.Result, Is.False);
+            Assert.That(_provider.Released.Count, Is.EqualTo(1));
+            Assert.That(_wearer.EquipAsync(CreateSkinnedItem("Jacket", _torso)).Result, Is.False);
         }
 
         [Test]
