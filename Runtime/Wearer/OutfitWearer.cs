@@ -25,6 +25,10 @@ namespace WTFGames.Hephaestus.Customization3D
         [Tooltip("Move spawned items to this GameObject's layer.")]
         private bool _matchLayer = true;
 
+        [SerializeField]
+        [Tooltip("Items a slot falls back to when its item is taken off, e.g. underwear or bare feet.")]
+        private OutfitPreset _defaultOutfit;
+
         private readonly Dictionary<OutfitSlot, EquippedOutfit> _equipped = new Dictionary<OutfitSlot, EquippedOutfit>();
         private readonly Dictionary<OutfitSlot, int> _requestIds = new Dictionary<OutfitSlot, int>();
         private readonly Dictionary<OutfitSlot, PendingEquip> _pending = new Dictionary<OutfitSlot, PendingEquip>();
@@ -38,6 +42,8 @@ namespace WTFGames.Hephaestus.Customization3D
 
         public event Action<OutfitItem> Unequipped;
 
+        public event Action<OutfitItem, Exception> EquipFailed;
+
         public OutfitSkeleton Skeleton
         {
             get
@@ -48,6 +54,18 @@ namespace WTFGames.Hephaestus.Customization3D
         }
 
         public bool IsConstructed => _provider != null;
+
+        /// <summary>
+        /// Items slots fall back to when their item is taken off: <see cref="Unequip"/> puts the
+        /// slot's default item back on, <see cref="UnequipAll"/> keeps default items on and puts
+        /// them back in the other slots, <see cref="EquipDefaultOutfitAsync"/> fills empty slots.
+        /// Unequipping a slot that wears its default item leaves it empty.
+        /// </summary>
+        public OutfitPreset DefaultOutfit
+        {
+            get => _defaultOutfit;
+            set => _defaultOutfit = value;
+        }
 
         public IReadOnlyCollection<OutfitItem> EquippedItems
         {
@@ -79,6 +97,79 @@ namespace WTFGames.Hephaestus.Customization3D
             if (strategy == null) throw new ArgumentNullException(nameof(strategy));
 
             _strategies[strategy.Mode] = strategy;
+        }
+
+        public bool IsLoading(OutfitSlot slot)
+        {
+            return slot != null && _pending.ContainsKey(slot);
+        }
+
+        public OutfitLoadout GetLoadout()
+        {
+            var ids = new List<string>(_equipped.Count);
+
+            foreach (var equipped in _equipped.Values)
+            {
+                ids.Add(equipped.Item.Id);
+            }
+
+            return new OutfitLoadout(ids);
+        }
+
+        public async Task<bool> ApplyLoadoutAsync(OutfitLoadout loadout, IOutfitItemCatalog catalog, CancellationToken cancellationToken = default)
+        {
+            if (loadout == null) throw new ArgumentNullException(nameof(loadout));
+            if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+
+            var items = new List<OutfitItem>(loadout.ItemIds.Count);
+            var slots = new HashSet<OutfitSlot>();
+            var complete = true;
+
+            foreach (var id in loadout.ItemIds)
+            {
+                if (catalog.TryGetItem(id, out var item) && item != null && item.Slot != null)
+                {
+                    items.Add(item);
+                    slots.Add(item.Slot);
+                }
+                else
+                {
+                    Debug.LogWarning($"{LogTag} Loadout item '{id}' isn't in the catalog; it's skipped.", this);
+                    complete = false;
+                }
+            }
+
+            foreach (var slot in new List<OutfitSlot>(_equipped.Keys))
+            {
+                if (!slots.Contains(slot)) Unequip(slot);
+            }
+
+            var requests = new List<Task<bool>>(items.Count);
+
+            foreach (var item in items)
+            {
+                requests.Add(EquipAsync(item, cancellationToken));
+            }
+
+            var results = await Task.WhenAll(requests);
+
+            return complete && Array.TrueForAll(results, equipped => equipped);
+        }
+
+        /// <summary>Puts the default outfit's items on the slots that are empty.</summary>
+        public Task<bool> EquipDefaultOutfitAsync(CancellationToken cancellationToken = default)
+        {
+            if (_defaultOutfit == null) return Task.FromResult(true);
+
+            var requests = new List<Task<bool>>();
+
+            foreach (var item in _defaultOutfit.Items)
+            {
+                if (item == null || item.Slot == null || _equipped.ContainsKey(item.Slot) || _pending.ContainsKey(item.Slot)) continue;
+                requests.Add(EquipAsync(item, cancellationToken));
+            }
+
+            return WhenAllEquipped(requests);
         }
 
         public bool TryGetEquipped(OutfitSlot slot, out OutfitItem item)
@@ -148,20 +239,20 @@ namespace WTFGames.Hephaestus.Customization3D
                 if (item != null) requests.Add(EquipAsync(item, cancellationToken));
             }
 
-            var results = await Task.WhenAll(requests);
-
-            return Array.TrueForAll(results, equipped => equipped);
+            return await WhenAllEquipped(requests);
         }
 
+        /// <remarks>When the default outfit has an item for the slot, it is put back on.</remarks>
         public bool Unequip(OutfitSlot slot)
         {
             if (slot == null) return false;
 
             NextRequestId(slot);
 
-            if (!TakeOff(slot)) return false;
+            if (!TakeOff(slot, out var removed)) return false;
 
             RefreshBodyParts();
+            RestoreDefault(slot, removed);
             return true;
         }
 
@@ -172,12 +263,22 @@ namespace WTFGames.Hephaestus.Customization3D
                 NextRequestId(slot);
             }
 
-            foreach (var slot in new List<OutfitSlot>(_equipped.Keys))
+            var removed = new List<OutfitItem>(_equipped.Count);
+
+            foreach (var pair in new List<KeyValuePair<OutfitSlot, EquippedOutfit>>(_equipped))
             {
-                TakeOff(slot);
+                // Default items stay on: taking everything off returns to the default outfit.
+                if (GetDefault(pair.Key) == pair.Value.Item) continue;
+
+                if (TakeOff(pair.Key, out var item)) removed.Add(item);
             }
 
             RefreshBodyParts();
+
+            foreach (var item in removed)
+            {
+                RestoreDefault(item.Slot, item);
+            }
         }
 
         /// <summary>
@@ -218,6 +319,11 @@ namespace WTFGames.Hephaestus.Customization3D
                         // Nobody waits for this item any more, so its failure doesn't matter.
                         return false;
                     }
+                    catch (Exception exception)
+                    {
+                        EquipFailed?.Invoke(item, exception);
+                        throw;
+                    }
 
                     if (!IsRequestAlive(slot, requestId, linked.Token))
                     {
@@ -229,25 +335,29 @@ namespace WTFGames.Hephaestus.Customization3D
                 if (prefab == null)
                 {
                     Debug.LogError($"{LogTag} Prefab '{item.AssetKey}' of item '{item.name}' wasn't loaded.", item);
+                    EquipFailed?.Invoke(item, null);
                     return false;
                 }
 
-                var strategy = GetStrategy(item.AttachMode);
+                IOutfitAttachStrategy strategy;
                 GameObject instance;
 
                 try
                 {
+                    strategy = GetStrategy(item);
                     instance = strategy.Attach(prefab, new OutfitAttachContext(item, Skeleton, transform));
                 }
-                catch
+                catch (Exception exception)
                 {
                     _provider.Release(item, prefab);
+                    EquipFailed?.Invoke(item, exception);
                     throw;
                 }
 
                 if (instance == null)
                 {
                     _provider.Release(item, prefab);
+                    EquipFailed?.Invoke(item, null);
                     return false;
                 }
 
@@ -290,7 +400,16 @@ namespace WTFGames.Hephaestus.Customization3D
 
         private bool TakeOff(OutfitSlot slot)
         {
+            return TakeOff(slot, out _);
+        }
+
+        private bool TakeOff(OutfitSlot slot, out OutfitItem removed)
+        {
+            removed = null;
+
             if (!_equipped.TryGetValue(slot, out var equipped)) return false;
+
+            removed = equipped.Item;
 
             _equipped.Remove(slot);
             equipped.Strategy.Detach(equipped.Instance);
@@ -328,6 +447,62 @@ namespace WTFGames.Hephaestus.Customization3D
             }
         }
 
+        // The slot's default item goes back on when another item leaves the slot.
+        private void RestoreDefault(OutfitSlot slot, OutfitItem removed)
+        {
+            if (_isDisposed) return;
+
+            var fallback = GetDefault(slot);
+
+            if (fallback != null && fallback != removed) EquipInBackground(fallback);
+        }
+
+        private OutfitItem GetDefault(OutfitSlot slot)
+        {
+            if (_defaultOutfit == null) return null;
+
+            OutfitItem fallback = null;
+
+            // The last item for the slot wins, as when the preset is equipped.
+            foreach (var item in _defaultOutfit.Items)
+            {
+                if (item != null && item.Slot == slot) fallback = item;
+            }
+
+            return fallback;
+        }
+
+        private async void EquipInBackground(OutfitItem item)
+        {
+            try
+            {
+                await EquipAsync(item);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+            }
+        }
+
+        private static async Task<bool> WhenAllEquipped(List<Task<bool>> requests)
+        {
+            var results = await Task.WhenAll(requests);
+
+            return Array.TrueForAll(results, equipped => equipped);
+        }
+
+        private IOutfitAttachStrategy GetStrategy(OutfitItem item)
+        {
+            if (item.AttachMode != OutfitAttachMode.Custom) return GetStrategy(item.AttachMode);
+
+            if (item.CustomStrategy == null)
+            {
+                throw new InvalidOperationException($"{LogTag} Custom item '{item.name}' has no attach strategy.");
+            }
+
+            return item.CustomStrategy;
+        }
+
         private IOutfitAttachStrategy GetStrategy(OutfitAttachMode mode)
         {
             if (_strategies.TryGetValue(mode, out var strategy)) return strategy;
@@ -339,6 +514,9 @@ namespace WTFGames.Hephaestus.Customization3D
                     break;
                 case OutfitAttachMode.Socket:
                     strategy = new SocketOutfitAttachStrategy();
+                    break;
+                case OutfitAttachMode.Material:
+                    strategy = new MaterialOutfitAttachStrategy();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, $"{LogTag} No strategy for attach mode {mode}; register one with {nameof(SetStrategy)}.");
