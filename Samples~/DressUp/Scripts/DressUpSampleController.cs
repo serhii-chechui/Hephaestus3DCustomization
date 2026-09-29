@@ -6,17 +6,23 @@ namespace WTFGames.Hephaestus.Customization3D.Samples.DressUp
 {
     /// <summary>
     /// Gives the character's wearer a prefab provider, puts on the default outfit and draws
-    /// buttons that change the item in every slot.
+    /// a panel that changes the item in every slot, shows which slots are loading, and saves
+    /// and restores the look as a loadout.
     /// </summary>
     public class DressUpSampleController : MonoBehaviour
     {
         private const float ReferenceHeight = 720f;
+        private const string SavedLookKey = "Hephaestus3DCustomization.DressUp.SavedLook";
 
         [SerializeField]
         private OutfitWearer _wearer;
 
         [SerializeField]
         private OutfitPrefabLibrary _library;
+
+        [SerializeField]
+        [Tooltip("Resolves the item ids of a saved look.")]
+        private OutfitItemCatalog _catalog;
 
         [SerializeField]
         [Tooltip("Slots in the order the panel lists them.")]
@@ -26,6 +32,7 @@ namespace WTFGames.Hephaestus.Customization3D.Samples.DressUp
         private OutfitItem[] _items = new OutfitItem[0];
 
         [SerializeField]
+        [Tooltip("The look put on at start and by the Default outfit button.")]
         private OutfitPreset _defaultOutfit;
 
         [SerializeField]
@@ -33,14 +40,24 @@ namespace WTFGames.Hephaestus.Customization3D.Samples.DressUp
         private float _simulatedLatency = 0.2f;
 
         private int _pendingRequests;
+        private string _status = string.Empty;
 
         public OutfitWearer Wearer => _wearer;
 
         private void Start()
         {
             _wearer.Construct(new PrefabOutfitAssetProvider(_library, _simulatedLatency));
+            _wearer.EquipFailed += OnEquipFailed;
+
+            // The wearer's own default outfit (the natural skin) fills the empty slots first.
+            Run(_wearer.EquipDefaultOutfitAsync());
 
             if (_defaultOutfit != null) Run(_wearer.EquipAsync(_defaultOutfit));
+        }
+
+        private void OnDestroy()
+        {
+            if (_wearer != null) _wearer.EquipFailed -= OnEquipFailed;
         }
 
         private void OnGUI()
@@ -62,6 +79,20 @@ namespace WTFGames.Hephaestus.Customization3D.Samples.DressUp
 
             if (_defaultOutfit != null && GUILayout.Button("Default outfit")) Run(_wearer.EquipAsync(_defaultOutfit));
 
+            GUILayout.Space(8f);
+            GUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Save look")) SaveLook();
+
+            GUI.enabled = _catalog != null && PlayerPrefs.HasKey(SavedLookKey);
+
+            if (GUILayout.Button("Restore look")) RestoreLook();
+
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+
+            if (_status.Length > 0) GUILayout.Label(_status);
+
             GUILayout.EndArea();
         }
 
@@ -70,7 +101,7 @@ namespace WTFGames.Hephaestus.Customization3D.Samples.DressUp
             _wearer.TryGetEquipped(slot, out var equipped);
 
             GUILayout.Space(6f);
-            GUILayout.Label(slot.DisplayName);
+            GUILayout.Label(_wearer.IsLoading(slot) ? slot.DisplayName + "  (loading…)" : slot.DisplayName);
             GUILayout.BeginHorizontal();
 
             if (GUILayout.Toggle(equipped == null, "None", GUI.skin.button) && equipped != null) _wearer.Unequip(slot);
@@ -86,6 +117,28 @@ namespace WTFGames.Hephaestus.Customization3D.Samples.DressUp
             }
 
             GUILayout.EndHorizontal();
+        }
+
+        private void SaveLook()
+        {
+            var loadout = _wearer.GetLoadout();
+
+            PlayerPrefs.SetString(SavedLookKey, JsonUtility.ToJson(loadout));
+            PlayerPrefs.Save();
+            _status = $"Saved a look of {loadout.ItemIds.Count} items.";
+        }
+
+        private void RestoreLook()
+        {
+            var loadout = JsonUtility.FromJson<OutfitLoadout>(PlayerPrefs.GetString(SavedLookKey));
+
+            Run(_wearer.ApplyLoadoutAsync(loadout, _catalog));
+            _status = $"Restored a look of {loadout.ItemIds.Count} items.";
+        }
+
+        private void OnEquipFailed(OutfitItem item, Exception exception)
+        {
+            _status = exception == null ? $"Couldn't put on {item.name}." : $"Couldn't put on {item.name}: {exception.Message}";
         }
 
         private async void Run(Task<bool> request)

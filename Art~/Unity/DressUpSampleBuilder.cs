@@ -20,6 +20,23 @@ public static class DressUpSampleBuilder
     private static readonly string[] Shoes = { "Sneakers", "BrownShoes", "Boots" };
     private static readonly string[] Hats = { "Fedora", "CockedFedora" };
 
+    // Skin tone material items: tone -> (FBX, material). Natural is the character's own skin.
+    private static readonly (string tone, string model, string material)[] SkinTones =
+    {
+        ("Natural", "Character", "M_Skin"),
+        ("Asian", "SkinTones", "M_Skin_Asian"),
+        ("African", "SkinTones", "M_Skin_African")
+    };
+
+    // Body part -> the character's renderer that shows it.
+    private static readonly (string part, string renderer)[] BodyParts =
+    {
+        ("Base", "Body"),
+        ("TorsoAndLegs", "Body_TorsoAndLegs"),
+        ("Arms", "Body_Arms"),
+        ("Feet", "Body_Feet")
+    };
+
     public static void Build()
     {
         ConfigureImporters();
@@ -29,10 +46,14 @@ public static class DressUpSampleBuilder
             EnsureFolder($"{Root}/{folder}");
         }
 
-        var slots = new[] { "Outfit", "Shoes", "Hat" }.ToDictionary(n => n, n => Save(OutfitSlot.Create(n), $"{Root}/Data/Slots/{n}.asset"));
-        var parts = new[] { "TorsoAndLegs", "Arms", "Feet" }.ToDictionary(n => n, n => Save(OutfitBodyPart.Create(n), $"{Root}/Data/BodyParts/{n}.asset"));
+        var slots = new[] { "Skin", "Outfit", "Shoes", "Hat" }.ToDictionary(n => n, n => Save(OutfitSlot.Create(n), $"{Root}/Data/Slots/{n}.asset"));
+        var parts = BodyParts.ToDictionary(b => b.part, b => Save(OutfitBodyPart.Create(b.part), $"{Root}/Data/BodyParts/{b.part}.asset"));
 
         var items = new List<OutfitItem>();
+        foreach (var skin in SkinTones)
+        {
+            items.Add(Save(OutfitItem.Create(skin.tone, slots["Skin"], OutfitAttachMode.Material, "Skin" + skin.tone), $"{Root}/Data/Items/{skin.tone}.asset"));
+        }
         foreach (var suit in Suits)
         {
             var hidden = LongSleeveSuits.Contains(suit) ? new[] { parts["TorsoAndLegs"], parts["Arms"] } : new[] { parts["TorsoAndLegs"] };
@@ -49,9 +70,12 @@ public static class DressUpSampleBuilder
 
         var preset = Save(OutfitPreset.Create("DefaultOutfit", new[] { items.First(i => i.name == "TShirtJeans"), items.First(i => i.name == "Sneakers") }),
             $"{Root}/Data/DefaultOutfit.asset");
+        // The wearer's default outfit: the skin slot falls back to the natural skin.
+        var defaultSkin = Save(OutfitPreset.Create("DefaultSkin", new[] { items.First(i => i.name == "Natural") }), $"{Root}/Data/DefaultSkin.asset");
+        var catalog = Save(OutfitItemCatalog.Create(items), $"{Root}/Data/OutfitItemCatalog.asset");
 
         var socketPosition = GetHatSocketPosition();
-        var character = BuildCharacter(slots["Hat"], parts, socketPosition);
+        var character = BuildCharacter(slots["Hat"], parts, defaultSkin, socketPosition);
 
         var library = ScriptableObject.CreateInstance<OutfitPrefabLibrary>();
         foreach (var name in Suits.Concat(Shoes))
@@ -62,9 +86,13 @@ public static class DressUpSampleBuilder
         {
             library.Entries.Add(new OutfitPrefabEntry { assetKey = hat, prefab = BuildHat(hat, socketPosition) });
         }
+        foreach (var skin in SkinTones)
+        {
+            library.Entries.Add(new OutfitPrefabEntry { assetKey = "Skin" + skin.tone, prefab = BuildSkin(skin.tone, skin.model, skin.material, parts) });
+        }
         Save(library, $"{Root}/Data/OutfitPrefabLibrary.asset");
 
-        BuildScene(character, library, slots.Values.ToArray(), items.ToArray(), preset);
+        BuildScene(character, library, catalog, slots.Values.ToArray(), items.ToArray(), preset);
         AssetDatabase.SaveAssets();
         Debug.Log("[DressUpSampleBuilder] Done.");
     }
@@ -86,7 +114,7 @@ public static class DressUpSampleBuilder
                 importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
                 importer.importAnimation = false;
             }
-            else if (path.Contains("Fedora") || path.Contains("PhotoZone"))
+            else if (path.Contains("Fedora") || path.Contains("PhotoZone") || path.Contains("SkinTones"))
             {
                 importer.animationType = ModelImporterAnimationType.None;
                 importer.importAnimation = false;
@@ -106,7 +134,7 @@ public static class DressUpSampleBuilder
         Debug.Log($"[DressUpSampleBuilder] Character avatar: human {avatar.isHuman}, valid {avatar.isValid}");
     }
 
-    private static GameObject BuildCharacter(OutfitSlot hatSlot, Dictionary<string, OutfitBodyPart> parts, Vector3 socketPosition)
+    private static GameObject BuildCharacter(OutfitSlot hatSlot, Dictionary<string, OutfitBodyPart> parts, OutfitPreset defaultOutfit, Vector3 socketPosition)
     {
         var character = (GameObject)PrefabUtility.InstantiatePrefab(LoadModel("Character"));
         character.name = "Character";
@@ -124,11 +152,12 @@ public static class DressUpSampleBuilder
 
         var wearer = character.AddComponent<OutfitWearer>();
         SetField(wearer, "_skeleton", skeleton);
+        SetField(wearer, "_defaultOutfit", defaultOutfit);
 
-        foreach (var part in parts)
+        foreach (var bodyPart in BodyParts)
         {
-            var body = character.transform.Find("Body_" + part.Key);
-            body.gameObject.AddComponent<OutfitBodyPartRenderer>().BodyPart = part.Value;
+            var body = character.transform.Find(bodyPart.renderer);
+            body.gameObject.AddComponent<OutfitBodyPartRenderer>().BodyPart = parts[bodyPart.part];
         }
 
         var socket = new GameObject("HatSocket").transform;
@@ -165,11 +194,28 @@ public static class DressUpSampleBuilder
         return prefab;
     }
 
-    private static void BuildScene(GameObject characterPrefab, OutfitPrefabLibrary library, OutfitSlot[] slots, OutfitItem[] items, OutfitPreset preset)
+    // A material item: the tone's material on every body part.
+    private static GameObject BuildSkin(string tone, string model, string materialName, Dictionary<string, OutfitBodyPart> parts)
+    {
+        var material = AssetDatabase.LoadAllAssetsAtPath($"{Models}/{model}.fbx").OfType<Material>().First(m => m.name == materialName);
+        var root = new GameObject("Skin" + tone);
+        var set = root.AddComponent<OutfitMaterialSet>();
+        foreach (var part in parts.Values)
+        {
+            set.Overrides.Add(new OutfitMaterialOverride { bodyPart = part, materials = new[] { material } });
+        }
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, $"{Root}/Prefabs/Skin{tone}.prefab");
+        Object.DestroyImmediate(root);
+        return prefab;
+    }
+
+    private static void BuildScene(GameObject characterPrefab, OutfitPrefabLibrary library, OutfitItemCatalog catalog, OutfitSlot[] slots, OutfitItem[] items, OutfitPreset preset)
     {
         // A new scene unloads the assets built so far; reload them by path afterwards.
         var characterPath = AssetDatabase.GetAssetPath(characterPrefab);
         var libraryPath = AssetDatabase.GetAssetPath(library);
+        var catalogPath = AssetDatabase.GetAssetPath(catalog);
         var presetPath = AssetDatabase.GetAssetPath(preset);
         var slotPaths = slots.Select(AssetDatabase.GetAssetPath).ToArray();
         var itemPaths = items.Select(AssetDatabase.GetAssetPath).ToArray();
@@ -178,6 +224,7 @@ public static class DressUpSampleBuilder
 
         characterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(characterPath);
         library = AssetDatabase.LoadAssetAtPath<OutfitPrefabLibrary>(libraryPath);
+        catalog = AssetDatabase.LoadAssetAtPath<OutfitItemCatalog>(catalogPath);
         preset = AssetDatabase.LoadAssetAtPath<OutfitPreset>(presetPath);
         slots = slotPaths.Select(AssetDatabase.LoadAssetAtPath<OutfitSlot>).ToArray();
         items = itemPaths.Select(AssetDatabase.LoadAssetAtPath<OutfitItem>).ToArray();
@@ -198,6 +245,7 @@ public static class DressUpSampleBuilder
         var serialized = new SerializedObject(sample);
         serialized.FindProperty("_wearer").objectReferenceValue = character.GetComponent<OutfitWearer>();
         serialized.FindProperty("_library").objectReferenceValue = library;
+        serialized.FindProperty("_catalog").objectReferenceValue = catalog;
         serialized.FindProperty("_defaultOutfit").objectReferenceValue = preset;
         SetArray(serialized.FindProperty("_slots"), slots);
         SetArray(serialized.FindProperty("_items"), items);
