@@ -149,14 +149,15 @@ public class Wardrobe
   objects that were never active, so call `wearer.Dispose()` before destroying such a
   character; it takes every item off, releases the prefabs and cancels pending loads.
 
-- `IsLoading(slot)` tells whether an item is on its way into a slot, e.g. to show a spinner.
-- `EquipFailed` reports items a current request couldn't put on (load error, missing prefab,
-  attach failure).
+- `IsLoading(slot)` tells whether an item is on its way into a slot, e.g. to show a spinner;
+  `EquipFailed` reports items a current request couldn't put on (load error, missing prefab,
+  attach failure). Both are on `IOutfitLoadingStatus`, which `OutfitWearer` implements.
 
 ### Saving and restoring outfits
 
 `GetLoadout()` returns the ids of the worn items; `OutfitLoadout` serializes with
-`JsonUtility`. `ApplyLoadoutAsync` makes the character wear exactly that loadout, resolving
+`JsonUtility`. Both calls below are on `IOutfitLoadoutWearer`, which extends `IOutfitWearer`
+and which `OutfitWearer` implements. `ApplyLoadoutAsync` makes the character wear exactly that loadout, resolving
 ids through an `IOutfitItemCatalog`, e.g. an **Outfit Item Catalog** asset:
 
 ```csharp

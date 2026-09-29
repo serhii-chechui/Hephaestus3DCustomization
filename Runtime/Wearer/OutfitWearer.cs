@@ -13,7 +13,7 @@ namespace WTFGames.Hephaestus.Customization3D
     /// Call <see cref="Construct"/> before equipping.
     /// </summary>
     [DisallowMultipleComponent]
-    public class OutfitWearer : MonoBehaviour, IOutfitWearer, IDisposable
+    public class OutfitWearer : MonoBehaviour, IOutfitLoadoutWearer, IOutfitLoadingStatus, IDisposable
     {
         private const string LogTag = "[Hephaestus 3D Customization]";
 

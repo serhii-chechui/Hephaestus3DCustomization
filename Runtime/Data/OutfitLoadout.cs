@@ -6,7 +6,7 @@ namespace WTFGames.Hephaestus.Customization3D
 {
     /// <summary>
     /// What a character wears, as item ids: a snapshot to save, send over the network or
-    /// restore with <see cref="IOutfitWearer.ApplyLoadoutAsync"/>. Serializable with JsonUtility.
+    /// restore with <see cref="IOutfitLoadoutWearer.ApplyLoadoutAsync"/>. Serializable with JsonUtility.
     /// </summary>
     [Serializable]
     public class OutfitLoadout

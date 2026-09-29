@@ -2,21 +2,17 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
-## [Unreleased]
+## [1.1.0] - 2026-09-29
 
 ### feat
-- Item ids and loadouts: `OutfitItem.Id` (defaults to the asset name), `IOutfitWearer.GetLoadout()` and `ApplyLoadoutAsync()`, resolving ids through `IOutfitItemCatalog` / the `OutfitItemCatalog` asset. `OutfitLoadout` serializes with JsonUtility.
+- Item ids and loadouts: `OutfitItem.Id` (defaults to the asset name), `GetLoadout()` and `ApplyLoadoutAsync()` on the new `IOutfitLoadoutWearer` (extends `IOutfitWearer`), resolving ids through `IOutfitItemCatalog` / the `OutfitItemCatalog` asset. `OutfitLoadout` serializes with JsonUtility.
 - Default outfit: `OutfitWearer.DefaultOutfit` is what slots fall back to; `Unequip` puts the slot's default item back on, `UnequipAll` returns to the default outfit, `EquipDefaultOutfitAsync` fills empty slots.
 - `Material` attach mode: `MaterialOutfitAttachStrategy` puts the materials of the prefab's `OutfitMaterialSet` on body part renderers and restores them on detach.
 - `Custom` attach mode: items can bring their own `OutfitAttachStrategyAsset`.
 - Several sockets per slot: `OutfitSocket.SocketId` and `OutfitItem.SocketId`; `OutfitSkeleton.TryGetSocket(slot, socketId, …)`.
 - Bone matching for items from other rigs: `OutfitSkeleton` bone aliases, case-insensitive and namespace-free matching.
-- `IOutfitWearer.IsLoading(slot)` and the `EquipFailed` event.
-
-### BREAKING CHANGES
-- `IOutfitWearer` has new members (`EquipFailed`, `IsLoading`, `GetLoadout`, `ApplyLoadoutAsync`); custom implementations of the interface must add them. Code that only uses `OutfitWearer` is unaffected.
-
-## [1.0.2] - 2026-09-29
+- `IsLoading(slot)` and the `EquipFailed` event on the new `IOutfitLoadingStatus`.
+- `IOutfitWearer` is unchanged; `OutfitWearer` implements the new interfaces.
 
 ### fix
 - `OutfitWearer` releases the loaded prefab when an attach strategy throws, instead of leaking it.
