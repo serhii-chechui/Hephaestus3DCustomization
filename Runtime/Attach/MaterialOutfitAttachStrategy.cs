@@ -5,15 +5,17 @@ namespace WTFGames.Hephaestus.Customization3D
 {
     /// <summary>
     /// Attaches material items: puts the materials of the prefab's <see cref="OutfitMaterialSet"/>
-    /// on the character's body part renderers and restores the previous materials on detach.
-    /// The returned instance is an empty marker object under the character. Give material items
-    /// their own slot, so two of them never change the same body part at once.
+    /// on the character's body part renderers. Items layer over each other per renderer: a
+    /// renderer shows the materials of the last item still worn, or its own materials when none
+    /// is left, whatever order items are put on and taken off in. The returned instance is an
+    /// empty marker object under the character.
     /// </summary>
     public class MaterialOutfitAttachStrategy : IOutfitAttachStrategy
     {
         private const string LogTag = "[Hephaestus 3D Customization]";
 
-        private readonly Dictionary<GameObject, List<MaterialSnapshot>> _snapshots = new Dictionary<GameObject, List<MaterialSnapshot>>();
+        private readonly Dictionary<Renderer, RendererMaterialStack> _stacks = new Dictionary<Renderer, RendererMaterialStack>();
+        private readonly Dictionary<GameObject, List<RendererMaterialStack>> _byInstance = new Dictionary<GameObject, List<RendererMaterialStack>>();
 
         public OutfitAttachMode Mode => OutfitAttachMode.Material;
 
@@ -27,7 +29,10 @@ namespace WTFGames.Hephaestus.Customization3D
                 return null;
             }
 
-            var snapshots = new List<MaterialSnapshot>();
+            var instance = new GameObject(prefab.name);
+            instance.transform.SetParent(context.Root, false);
+
+            var stacks = new List<RendererMaterialStack>();
 
             foreach (var entry in set.Overrides)
             {
@@ -37,28 +42,33 @@ namespace WTFGames.Hephaestus.Customization3D
                 {
                     if (renderer == null) continue;
 
-                    snapshots.Add(new MaterialSnapshot(renderer, renderer.sharedMaterials));
-                    renderer.sharedMaterials = entry.materials;
+                    if (!_stacks.TryGetValue(renderer, out var stack))
+                    {
+                        stack = new RendererMaterialStack(renderer);
+                        _stacks.Add(renderer, stack);
+                    }
+
+                    stack.Push(instance, entry.materials);
+                    stacks.Add(stack);
                 }
             }
 
-            var instance = new GameObject(prefab.name);
-            instance.transform.SetParent(context.Root, false);
-            _snapshots.Add(instance, snapshots);
+            _byInstance.Add(instance, stacks);
 
             return instance;
         }
 
         public void Detach(GameObject instance)
         {
-            if (_snapshots.TryGetValue(instance, out var snapshots))
+            if (_byInstance.TryGetValue(instance, out var stacks))
             {
-                _snapshots.Remove(instance);
+                _byInstance.Remove(instance);
 
-                // Restore in reverse order, so a renderer changed twice ends with its first materials.
-                for (var i = snapshots.Count - 1; i >= 0; i--)
+                foreach (var stack in stacks)
                 {
-                    if (snapshots[i].Renderer != null) snapshots[i].Renderer.sharedMaterials = snapshots[i].Materials;
+                    stack.Remove(instance);
+
+                    if (stack.IsEmpty) _stacks.Remove(stack.Renderer);
                 }
             }
 
