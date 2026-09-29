@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
+## [1.2.0] - 2026-09-29
+
+### feat
+- `OutfitMeshCombiner` bakes a dressed character's skinned renderers into one mesh after the worn items change, so crowds cost one skinning and a few draw calls per character. `SkinnedMeshCombiner` is the same bake as a utility: submeshes with the same material merge, and materials that differ only in textures merge through GPU-built atlases.
+- `SkinnedOutfitAttachStrategy` removes `Animator` and `Animation` components from skinned items (`RemoveAnimators`, on by default). Generic models imported with an avatar get an `Animator` on their root that only cost time on a worn item.
+- `OutfitWearer.RefreshBodyParts()` and `OutfitWearer.IsLoadingAny`.
+
+### perf
+- `OutfitWearer.EquippedItems` returns the same snapshot until the worn items change instead of a new list on every call.
+- `SkinnedOutfitAttachStrategy` logs one warning per item listing its missing bones instead of one per bone and renderer, and resolves bones shared by several renderers once.
+
 ## [1.1.1] - 2026-09-29
 
 ### feat

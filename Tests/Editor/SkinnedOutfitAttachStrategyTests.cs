@@ -1,6 +1,8 @@
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace WTFGames.Hephaestus.Customization3D.Tests
 {
@@ -64,6 +66,44 @@ namespace WTFGames.Hephaestus.Customization3D.Tests
 
             _skeleton.TryGetBone("Spine", out var spine);
             Assert.That(renderer.bones[2], Is.SameAs(spine));
+        }
+
+        [Test]
+        public void Attach_MissingBones_OneWarningPerItem()
+        {
+            var prefab = _rig.CreateSkinnedItem("Shirt", extraBone: "Tail");
+            var second = Object.Instantiate(prefab.transform.Find("Mesh").gameObject, prefab.transform, false);
+            second.name = "Mesh2";
+
+            LogAssert.Expect(LogType.Warning, new Regex(@"'Shirt' has 1 bone\(s\) missing on skeleton 'Character': 'Tail' \(bound to 'Spine'\)\.$"));
+
+            Attach(prefab);
+
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
+        public void Attach_RemovesAnimators()
+        {
+            var prefab = _rig.CreateSkinnedItem("Shirt", extraBone: "Head");
+            prefab.AddComponent<Animator>();
+
+            var instance = Attach(prefab);
+
+            Assert.That(instance.GetComponentsInChildren<Animator>(true), Is.Empty);
+            Assert.That(prefab.GetComponent<Animator>(), Is.Not.Null);
+        }
+
+        [Test]
+        public void Attach_RemoveAnimatorsOff_KeepsAnimators()
+        {
+            var prefab = _rig.CreateSkinnedItem("Shirt", extraBone: "Head");
+            prefab.AddComponent<Animator>();
+            _strategy.RemoveAnimators = false;
+
+            var instance = Attach(prefab);
+
+            Assert.That(instance.GetComponent<Animator>(), Is.Not.Null);
         }
 
         [Test]

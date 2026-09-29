@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -33,9 +34,11 @@ namespace WTFGames.Hephaestus.Customization3D
         private readonly Dictionary<OutfitSlot, int> _requestIds = new Dictionary<OutfitSlot, int>();
         private readonly Dictionary<OutfitSlot, PendingEquip> _pending = new Dictionary<OutfitSlot, PendingEquip>();
         private readonly Dictionary<OutfitAttachMode, IOutfitAttachStrategy> _strategies = new Dictionary<OutfitAttachMode, IOutfitAttachStrategy>();
+        private readonly HashSet<OutfitBodyPart> _hiddenBodyParts = new HashSet<OutfitBodyPart>();
         private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
 
         private IOutfitAssetProvider _provider;
+        private IReadOnlyCollection<OutfitItem> _equippedItems;
         private bool _isDisposed;
 
         public event Action<OutfitItem> Equipped;
@@ -67,20 +70,31 @@ namespace WTFGames.Hephaestus.Customization3D
             set => _defaultOutfit = value;
         }
 
+        /// <remarks>
+        /// A snapshot that stays the same until the worn items change, so reading it every frame
+        /// doesn't allocate.
+        /// </remarks>
         public IReadOnlyCollection<OutfitItem> EquippedItems
         {
             get
             {
-                var items = new List<OutfitItem>(_equipped.Count);
+                if (_equippedItems != null) return _equippedItems;
+
+                var items = new OutfitItem[_equipped.Count];
+                var index = 0;
 
                 foreach (var equipped in _equipped.Values)
                 {
-                    items.Add(equipped.Item);
+                    items[index++] = equipped.Item;
                 }
 
-                return items;
+                _equippedItems = new ReadOnlyCollection<OutfitItem>(items);
+                return _equippedItems;
             }
         }
+
+        /// <summary>True while any slot is loading an item.</summary>
+        public bool IsLoadingAny => _pending.Count > 0;
 
         /// <summary>
         /// Sets the asset source. With Zenject, call it from an [Inject] method of your own
@@ -367,6 +381,7 @@ namespace WTFGames.Hephaestus.Customization3D
 
                 TakeOff(slot);
                 _equipped[slot] = new EquippedOutfit(item, prefab, instance, strategy);
+                _equippedItems = null;
                 RefreshBodyParts();
                 Equipped?.Invoke(item);
 
@@ -394,6 +409,7 @@ namespace WTFGames.Hephaestus.Customization3D
             }
 
             _equipped.Clear();
+            _equippedItems = null;
 
             if (detachInstances) RefreshBodyParts();
         }
@@ -412,6 +428,7 @@ namespace WTFGames.Hephaestus.Customization3D
             removed = equipped.Item;
 
             _equipped.Remove(slot);
+            _equippedItems = null;
             equipped.Strategy.Detach(equipped.Instance);
             _provider.Release(equipped.Item, equipped.Prefab);
             Unequipped?.Invoke(equipped.Item);
@@ -419,26 +436,30 @@ namespace WTFGames.Hephaestus.Customization3D
             return true;
         }
 
-        // A body part stays hidden while at least one worn item hides it.
-        private void RefreshBodyParts()
+        /// <summary>
+        /// Turns the body part renderers on or off for the worn items: a body part stays hidden
+        /// while at least one worn item hides it. The wearer calls it whenever the items change;
+        /// call it after turning body part renderers on or off yourself.
+        /// </summary>
+        public void RefreshBodyParts()
         {
             var skeleton = Skeleton;
 
             if (skeleton == null) return;
 
-            var hidden = new HashSet<OutfitBodyPart>();
+            _hiddenBodyParts.Clear();
 
             foreach (var equipped in _equipped.Values)
             {
                 foreach (var bodyPart in equipped.Item.HiddenBodyParts)
                 {
-                    if (bodyPart != null) hidden.Add(bodyPart);
+                    if (bodyPart != null) _hiddenBodyParts.Add(bodyPart);
                 }
             }
 
             foreach (var bodyPart in skeleton.BodyParts)
             {
-                var visible = !hidden.Contains(bodyPart);
+                var visible = !_hiddenBodyParts.Contains(bodyPart);
 
                 foreach (var renderer in skeleton.GetBodyPartRenderers(bodyPart))
                 {
