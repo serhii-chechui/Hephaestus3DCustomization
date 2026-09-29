@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e9ba028829824a89b94fc3b0e255082, type: 3}
   m_Name: CockedFedora
   m_EditorClassIdentifier: com.wtfgames.hephaestus.3d.customization::WTFGames.Hephaestus.Customization3D.OutfitItem
-  _slot: {fileID: 11400000, guid: 12ed60ed737fa429a994f605c71a1f93, type: 2}
+  _slot: {fileID: 11400000, guid: a0e61e07614644fc3abaec62f0f826c5, type: 2}
   _attachMode: 1
   _assetKey: CockedFedora
   _hiddenBodyParts: []

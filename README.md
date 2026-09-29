@@ -179,17 +179,17 @@ MPFB. It writes the FBX files (including the photo zone), their textures and
 posed in MakeHuman's T-pose, which becomes their rest pose, so Unity's Humanoid retargeting
 maps clips from other skeletons correctly.
 
+The idle clip is a Humanoid `Animation/Idle.anim`: muscle curves that play on any Humanoid
+avatar. `Art~/Unity/ExtractIdleClip.cs` extracts it in Unity from the library's
+`UAL1_Standard.fbx` (the version without root motion), imported with the settings from the
+pack's `Unity_Setup.png` (Humanoid, Bake Axis Conversion, root motion node `root`). Don't
+re-export the clip through Blender: the re-exported file loses that axis setup, and the
+retargeted poses come out mirrored (the body leans backwards).
+
 `Art~/Unity/DressUpSampleBuilder.cs` builds the prefabs, items, lights and scene of the
-sample from them: copy the FBX files to `Models`, the textures to `Models/Textures`,
-`Art~/Animations/Idle.fbx` to `Animation`, put the builder in an `Editor` folder and run
-`DressUpSampleBuilder.Build`. It imports the character and the idle clip as Humanoid.
-
-`Art~/Animations/Idle.fbx` is extracted from the library's `UAL1_Standard.fbx` (the version
-without root motion):
-
-```bash
-Blender --background --factory-startup --python "Art~/extract_idle.py" -- UAL1_Standard.fbx "Art~/Animations/Idle.fbx"
-```
+sample: copy the FBX files to `Models`, the textures to `Models/Textures`, put `Idle.anim`
+in `Animation`, put the builder in an `Editor` folder and run `DressUpSampleBuilder.Build`.
+It imports the character as Humanoid.
 
 ## Tests
 
