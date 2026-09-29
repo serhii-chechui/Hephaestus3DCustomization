@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file in accordance with the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines.
 
-## [Unreleased]
+## [1.1.1] - 2026-09-29
 
 ### feat
 - Dress-Up sample shows the 1.1 API: skin tone `Material` items (MakeHuman CC0 skins), the natural skin as the wearer's default outfit, loading indicators per slot and failure messages, and Save look / Restore look through loadouts and an item catalog.
